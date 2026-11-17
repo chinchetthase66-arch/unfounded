@@ -28,13 +28,19 @@ const DATE_THAI_LABELS = {
 /**
  * เริ่มต้นระบบเมื่อโหลดหน้าเว็บ
  */
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
   onBalloonQtyInput();
-  await syncAllDataFromCloud();
-  switchMainTab('balloon', { keepHash: true });
-  if (location.hash === '#admin') {
+  const openAdmin = location.hash === '#admin';
+  if (openAdmin && isAdminLoggedIn()) {
+    switchMainTab('admin', { keepHash: true });
+  } else if (openAdmin) {
+    switchMainTab('balloon', { keepHash: true });
     handleAdminNavClick();
+  } else {
+    switchMainTab('balloon', { keepHash: true });
   }
+  document.documentElement.classList.remove('open-admin');
+  syncAllDataFromCloud();
 });
 
 window.addEventListener('hashchange', () => {
