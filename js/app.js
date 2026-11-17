@@ -31,10 +31,17 @@ const DATE_THAI_LABELS = {
 window.addEventListener('DOMContentLoaded', async () => {
   onBalloonQtyInput();
   await syncAllDataFromCloud();
-  switchMainTab('balloon');
-  // ลิงก์จากสตูดิโอพิมพ์ตั๋ว (#admin) → เปิดล็อกอิน/แอดมินทันที
+  switchMainTab('balloon', { keepHash: true });
   if (location.hash === '#admin') {
     handleAdminNavClick();
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  if (location.hash === '#admin') {
+    handleAdminNavClick();
+  } else if (APP_STATE.activeTab === 'admin') {
+    switchMainTab('balloon', { keepHash: true });
   }
 });
 
@@ -62,7 +69,7 @@ async function syncAllDataFromCloud() {
 /**
  * สลับแท็บหลักของแอป
  */
-function switchMainTab(tabName) {
+function switchMainTab(tabName, options = {}) {
   APP_STATE.activeTab = tabName;
   const tabs = ['balloon', 'lookup', 'admin'];
   tabs.forEach(t => {
@@ -85,6 +92,14 @@ function switchMainTab(tabName) {
       }
     }
   });
+
+  if (!options.keepHash) {
+    if (tabName === 'admin') {
+      if (location.hash !== '#admin') history.replaceState(null, '', '#admin');
+    } else if (location.hash === '#admin') {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  }
 
   if (tabName === 'admin') {
     refreshAdminPortal();
