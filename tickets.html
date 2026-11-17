@@ -259,22 +259,25 @@
         </div>
       </div>
 
+      <!-- คู่มือพิมพ์หน้างาน ~500 ใบ (ตามคำขอลูกค้า) -->
+      <div class="mt-4 p-3.5 rounded-xl border text-xs leading-relaxed" style="background:rgba(47,74,58,0.22);border-color:rgba(184,212,196,0.35);color:var(--mist);">
+        <strong style="color:#c5e0d0;">ตั๋วแมนนวลแบบตั๋วรถขายหน้างาน · ประมาณ 500 ใบ</strong>
+        — จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท · เทศกาลท่องเที่ยวเมืองพร้าว · วันที่ 20–21 พฤศจิกายน 2569 · เวลา 18.00–20.00 น. · ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
+        <br />แนะนำพิมพ์ทีละเล่ม 100 ใบ (10 หน้า A4) แล้วเย็บต้นขั้วฉีกขาย · กระดาษ A4 แนวตั้ง · เปิด “พื้นหลังกราฟิก” ในหน้าต่างพิมพ์ · รวม 500 ใบ = 50 หน้า / มูลค่าหน้างาน 50,000 บาท
+      </div>
+
       <!-- ปุ่มลัดเลือกจำนวนใบ -->
       <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex flex-wrap items-center gap-2">
           <span class="text-slate-400 font-medium">เลือกจำนวนด่วน:</span>
-          <button onclick="setRangePreset(1, 10)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
-            0001 - 0010 (10 ใบ / 1 หน้า)
-          </button>
-          <button onclick="setRangePreset(1, 20)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
-            0001 - 0020 (20 ใบ / 2 หน้า)
-          </button>
-          <button onclick="setRangePreset(1, 50)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
-            0001 - 0050 (50 ใบ / 5 หน้า)
-          </button>
-          <button onclick="setRangePreset(1, 100)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
-            0001 - 0100 (100 ใบ / 10 หน้า)
-          </button>
+          <button type="button" onclick="setRangePreset(1, 10)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">0001–0010</button>
+          <button type="button" onclick="setRangePreset(1, 50)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">0001–0050</button>
+          <button type="button" onclick="setRangePreset(1, 100)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">เล่ม 1: 0001–0100</button>
+          <button type="button" onclick="setRangePreset(101, 200)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">เล่ม 2: 0101–0200</button>
+          <button type="button" onclick="setRangePreset(201, 300)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">เล่ม 3: 0201–0300</button>
+          <button type="button" onclick="setRangePreset(301, 400)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">เล่ม 4: 0301–0400</button>
+          <button type="button" onclick="setRangePreset(401, 500)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">เล่ม 5: 0401–0500</button>
+          <button type="button" onclick="setRangePreset(1, 500)" class="px-3 py-1.5 rounded-lg font-extrabold border-0 cursor-pointer" style="background:var(--candle);color:var(--ink);">ทั้งชุด 0001–0500 (500 ใบ)</button>
         </div>
         <div id="ticketSummaryBadge" class="text-emerald-400 font-bold text-sm">
           กำลังแสดงตั๋ว 10 ใบ (รวมมูลค่า 1,000 บาท)
@@ -419,10 +422,10 @@
                 เทศกาลท่องเที่ยวเมืองพร้าว
               </div>
               <div class="text-[9px] text-slate-600 leading-tight mt-0.5">
-                20-21 พ.ย. 2569 (18.00-20.00 น.)
+                20-21 พ.ย. 2569 · 18.00-20.00 น.
               </div>
               <div class="text-[9px] text-slate-600 leading-tight">
-                ณ โฮงชาฮักมี อ.พร้าว
+                ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว
               </div>
             </div>
 
@@ -478,15 +481,20 @@
       `;
     }
 
+    let renderTicketsToken = 0;
+
     function renderTickets() {
       let start = parseInt(document.getElementById('startNumInput').value, 10) || 1;
       let end = parseInt(document.getElementById('endNumInput').value, 10) || 10;
       if (start < 1) start = 1;
       if (end < start) end = start;
+      // รองรับพิมพ์หน้างานชุดละสูงสุด 500 ใบ (ตามคำขอลูกค้า)
       if (end - start > 499) {
         end = start + 499;
         document.getElementById('endNumInput').value = end;
       }
+      document.getElementById('startNumInput').value = start;
+      document.getElementById('endNumInput').value = end;
 
       const dateMode = document.getElementById('dateModeSelect').value;
       const artworkMode = document.getElementById('artworkModeSelect').value;
@@ -501,31 +509,44 @@
         `กำลังแสดงตั๋ว ${totalTickets.toLocaleString()} ใบ (NO.${formatSerial(start)} - NO.${formatSerial(end)}) • ${totalPages} หน้า A4 • มูลค่ารวม ${totalValue.toLocaleString()} บาท`;
 
       const container = document.getElementById('sheetsContainer');
+      const token = ++renderTicketsToken;
+      container.innerHTML = `<div class="no-print text-center py-10 text-sm" style="color:var(--candle);">กำลังจัดหน้าตั๋ว ${totalTickets.toLocaleString()} ใบ (${totalPages} หน้า A4)…</div>`;
+
+      // สร้างทีละชุดหน้า เพื่อไม่ให้เบราว์เซอร์ค้างตอนเตรียม 500 ใบ
+      const CHUNK_PAGES = 5;
+      let pageIdx = 0;
       let sheetsHtml = '';
 
-      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
-        const pageStart = start + pageIdx * perPage;
-        const pageEnd = Math.min(end, pageStart + perPage - 1);
-        let cardsHtml = '';
-        for (let num = pageStart; num <= pageEnd; num++) {
-          cardsHtml += renderSingleTicketHtml(num, dateMode, artworkMode);
+      function paintChunk() {
+        if (token !== renderTicketsToken) return;
+        const chunkEnd = Math.min(totalPages, pageIdx + CHUNK_PAGES);
+        for (; pageIdx < chunkEnd; pageIdx++) {
+          const pageStart = start + pageIdx * perPage;
+          const pageEnd = Math.min(end, pageStart + perPage - 1);
+          let cardsHtml = '';
+          for (let num = pageStart; num <= pageEnd; num++) {
+            cardsHtml += renderSingleTicketHtml(num, dateMode, artworkMode);
+          }
+          const gridClass = cols === 2 ? 'tickets-grid-2col' : 'tickets-grid-1col';
+          sheetsHtml += `
+            <div class="a4-sheet">
+              <div class="flex items-center justify-between text-[9.5px] text-slate-500 border-b border-slate-200 pb-1 mb-2">
+                <span>จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท • เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20-21 พฤศจิกายน 2569 เวลา 18.00 - 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</span>
+                <span class="font-mono font-bold">แผ่นที่ ${pageIdx + 1}/${totalPages} (NO.${formatSerial(pageStart)}-${formatSerial(pageEnd)})</span>
+              </div>
+              <div class="${gridClass}">
+                ${cardsHtml}
+              </div>
+            </div>
+          `;
         }
-
-        const gridClass = cols === 2 ? 'tickets-grid-2col' : 'tickets-grid-1col';
-        sheetsHtml += `
-          <div class="a4-sheet">
-            <div class="flex items-center justify-between text-[9.5px] text-slate-500 border-b border-slate-200 pb-1 mb-2">
-              <span>บัตรชมมินิบอลลูน คนละ 100 บาท • เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20-21 พฤศจิกายน 2569 เวลา 18.00 - 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</span>
-              <span class="font-mono font-bold">แผ่นที่ ${pageIdx + 1}/${totalPages} (NO.${formatSerial(pageStart)}-${formatSerial(pageEnd)})</span>
-            </div>
-            <div class="${gridClass}">
-              ${cardsHtml}
-            </div>
-          </div>
-        `;
+        if (pageIdx < totalPages) {
+          requestAnimationFrame(paintChunk);
+        } else {
+          container.innerHTML = sheetsHtml;
+        }
       }
-
-      container.innerHTML = sheetsHtml;
+      requestAnimationFrame(paintChunk);
     }
 
     function openRecordSalesModal() {
