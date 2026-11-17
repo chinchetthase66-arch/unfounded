@@ -32,6 +32,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   onLanternQtyInput();
   onBalloonQtyInput();
   await syncAllDataFromCloud();
+  // ลิงก์จากสตูดิโอพิมพ์ตั๋ว (#admin) → เปิดล็อกอิน/แอดมินทันที
+  if (location.hash === '#admin') {
+    handleAdminNavClick();
+  }
 });
 
 /**

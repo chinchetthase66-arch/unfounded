@@ -565,7 +565,6 @@
         <button type="button" id="navBtn-lantern" onclick="switchMainTab('lantern')" class="nav-btn nav-active">จองโคมลอย 24–25 พ.ย.</button>
         <button type="button" id="navBtn-balloon" onclick="switchMainTab('balloon')" class="nav-btn nav-idle">บัตรมินิบอลลูน 20–21 พ.ย.</button>
         <button type="button" id="navBtn-lookup" onclick="switchMainTab('lookup')" class="nav-btn nav-idle">ค้นหาบัตร</button>
-        <a href="./tickets.html" class="nav-link-tickets">พิมพ์ตั๋วรถ 100 บาท</a>
         <button type="button" id="navBtn-admin" onclick="handleAdminNavClick()" class="nav-btn nav-admin">แอดมิน</button>
       </nav>
     </div>
@@ -720,10 +719,7 @@
         </div>
         <div class="hero-action">
           <p class="hero-action__copy">ชมมินิบอลลูน 20–21 พ.ย. 2569 เวลา 18.00–20.00 น. · <strong>คนละ 100 บาท</strong></p>
-          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-            <button type="button" class="btn-cta" style="background:var(--forest);color:var(--paper);" onclick="document.getElementById('balloonBookingForm').scrollIntoView({behavior:'smooth',block:'start'})">ซื้อบัตรออนไลน์</button>
-            <a href="./tickets.html" class="btn-cta" style="background:transparent;color:var(--mist);border:1px solid rgba(217,224,214,0.35);box-shadow:none;text-decoration:none;">พิมพ์ตั๋วรถ A4</a>
-          </div>
+          <button type="button" class="btn-cta" style="background:var(--forest);color:var(--paper);" onclick="document.getElementById('balloonBookingForm').scrollIntoView({behavior:'smooth',block:'start'})">ซื้อบัตรออนไลน์</button>
         </div>
       </div>
 
@@ -849,7 +845,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:0.45rem;">
           <button type="button" onclick="refreshAdminPortal()" class="admin-btn admin-btn--quiet">รีเฟรช</button>
           <button type="button" onclick="openWalkinPosModal()" class="admin-btn admin-btn--forest">บันทึกขายหน้างาน</button>
-          <a href="./tickets.html" class="admin-btn admin-btn--primary" style="text-decoration:none;display:inline-flex;align-items:center;">พิมพ์ตั๋วรถ 100฿</a>
+          <a href="./tickets.html" class="admin-btn admin-btn--primary" style="text-decoration:none;display:inline-flex;align-items:center;" title="สตูดิโอพิมพ์ตั๋วแมนนวลแบบตั๋วรถขายหน้างาน (Admin เท่านั้น)">บัตรชมมินิบอลลูน</a>
           <button type="button" onclick="openAdminSettingsModal()" class="admin-btn admin-btn--quiet">ตั้งค่าโควตา</button>
           <button type="button" onclick="adminLogout()" class="admin-btn admin-btn--quiet" style="border-color:rgba(166,107,107,0.4);color:#e8c4c4;">ออกจากระบบ</button>
         </div>

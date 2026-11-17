@@ -181,15 +181,23 @@
 <body class="min-h-screen pb-16">
 
   <!-- แถบควบคุมด้านบน (ซ่อนอัตโนมัติเวลาสั่งพิมพ์) -->
+  <div id="ticketAuthGate" class="no-print fixed inset-0 z-[60] hidden items-center justify-center p-4" style="background:rgba(10,12,16,0.92);">
+    <div class="ticket-shell-panel max-w-md w-full p-6 text-center space-y-3">
+      <h2 class="font-display text-xl" style="color:var(--candle);margin:0;">สำหรับแอดมินเท่านั้น</h2>
+      <p class="text-sm" style="color:var(--mist);margin:0;">ระบบพิมพ์บัตรชมมินิบอลลูนแบบตั๋วรถขายหน้างาน ต้องเข้าสู่ระบบแอดมินก่อน เพื่อกันไม่ให้ลูกค้าทั่วไปสั่งพิมพ์เอง</p>
+      <a href="./index.html#admin" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-bold text-sm border-0" style="background:var(--candle);color:var(--ink);text-decoration:none;">ไปหน้าแอดมินเพื่อล็อกอิน</a>
+    </div>
+  </div>
+
   <header class="no-print ticket-shell-header sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <a href="./index.html" class="inline-flex items-center px-3.5 py-2 rounded-xl text-sm font-semibold border transition" style="background:#1e2832;color:var(--candle);border-color:rgba(201,137,42,0.35);">
-          กลับหน้าเว็บหลัก
+          กลับแอดมิน / หน้าหลัก
         </a>
         <div>
           <h1 class="text-base md:text-lg font-display" style="color:var(--candle);margin:0;">
-            สตูดิโอพิมพ์ตั๋วชมมินิบอลลูน คนละ 100 บาท (แบบตั๋วรถ)
+            บัตรชมมินิบอลลูน · พิมพ์ตั๋วแมนนวล (Admin)
           </h1>
           <p class="text-xs" style="color:rgba(217,224,214,0.75);margin:0.25rem 0 0;">
             เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20–21 พฤศจิกายน 2569 เวลา 18.00 – 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
@@ -366,11 +374,38 @@
     const ARTWORK_CHECKERED = './บอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง.png';
     const ARTWORK_COW = './บอลลูนวัวยักษ์เหนือนาทุ่ง.png';
 
+    function isTicketStudioAdmin() {
+      try {
+        return sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'authenticated';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function enforceTicketStudioAdminGate() {
+      const gate = document.getElementById('ticketAuthGate');
+      if (isTicketStudioAdmin()) {
+        if (gate) {
+          gate.classList.add('hidden');
+          gate.classList.remove('flex');
+        }
+        return true;
+      }
+      if (gate) {
+        gate.classList.remove('hidden');
+        gate.classList.add('flex');
+      }
+      const sheets = document.getElementById('sheetsContainer');
+      if (sheets) sheets.innerHTML = '';
+      return false;
+    }
+
     function formatSerial(num) {
       return String(num).padStart(4, '0');
     }
 
     function setRangePreset(start, end) {
+      if (!enforceTicketStudioAdminGate()) return;
       document.getElementById('startNumInput').value = start;
       document.getElementById('endNumInput').value = end;
       renderTickets();
@@ -484,6 +519,7 @@
     let renderTicketsToken = 0;
 
     function renderTickets() {
+      if (!enforceTicketStudioAdminGate()) return;
       let start = parseInt(document.getElementById('startNumInput').value, 10) || 1;
       let end = parseInt(document.getElementById('endNumInput').value, 10) || 10;
       if (start < 1) start = 1;
@@ -618,7 +654,15 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      if (!enforceTicketStudioAdminGate()) return;
       renderTickets();
+    });
+
+    window.addEventListener('beforeprint', () => {
+      if (!isTicketStudioAdmin()) {
+        alert('ต้องเข้าสู่ระบบแอดมินก่อนจึงพิมพ์ตั๋วได้');
+        window.location.href = './index.html#admin';
+      }
     });
   </script>
 </body>
