@@ -188,26 +188,75 @@ async function findDuplicateSlipBooking(slipQrRef, slipQrRaw) {
 }
 
 /**
+ * อ่าน TLV แบบ EMVCo (ความยาว 2 หลัก) จาก payload สลิปธนาคารไทย
+ */
+function parseEmvCoTlv(payload) {
+  const map = {};
+  if (!payload || typeof payload !== 'string') return map;
+  let i = 0;
+  while (i + 4 <= payload.length) {
+    const tag = payload.slice(i, i + 2);
+    const len = parseInt(payload.slice(i + 2, i + 4), 10);
+    if (!Number.isFinite(len) || len < 0 || i + 4 + len > payload.length) break;
+    map[tag] = payload.slice(i + 4, i + 4 + len);
+    i += 4 + len;
+  }
+  return map;
+}
+
+/**
  * แยกวิเคราะห์ข้อมูล QR สลิปธนาคารไทย (Thai Bank Mini-QR / EMVCo Payload)
- * เพื่อดึงรหัสอ้างอิงธุรกรรมธนาคาร (Transaction Reference ID)
+ * ดึงรหัสอ้างอิงธุรกรรม + ยอดเงินจาก Tag 54 (ถ้ามี) เพื่อช่วยเทียบสลิป
+ * หมายเหตุ: ไม่ใช้ OCR เป็นหลัก เพราะสลิปแต่ละธนาคารฟอนต์/เลย์เอาต์ต่างกันมาก
  */
 function parseThaiBankSlipQrPayload(rawQrText) {
   if (!rawQrText || typeof rawQrText !== 'string') return null;
   const trimmed = rawQrText.trim();
+  const tlv = parseEmvCoTlv(trimmed);
 
-  // รูปแบบ EMVCo ของสลิปธนาคารไทย มักขึ้นต้นด้วย 00...
-  // พยายามดึงรหัสอ้างอิงธุรกรรมความยาว 15-35 ตัวอักษรที่เป็นตัวเลข/ตัวอักษรภาษาอังกฤษ
-  const refMatches = trimmed.match(/[0-9]{12,25}[A-Z0-9]{0,10}|[A-Z0-9]{15,32}/g);
-  let refCode = trimmed;
-  if (refMatches && refMatches.length > 0) {
-    // เลือกชุดรหัสอ้างอิงที่ยาวและจำเพาะที่สุด
-    refCode = refMatches.reduce((a, b) => (b.length >= a.length ? b : a), refMatches[0]);
+  // Tag 54 = Transaction Amount (EMVCo)
+  let amountFromQr = null;
+  if (tlv['54']) {
+    const n = parseFloat(tlv['54']);
+    if (Number.isFinite(n) && n > 0) amountFromQr = Math.round(n * 100) / 100;
   }
+
+  // รหัสอ้างอิง: ใช้ค่าจาก TLV ที่ยาว/จำเพาะ หรือ fallback แบบ regex
+  const candidateTags = ['65', '62', '27', '28', '29', '30', '31'];
+  let refCode = '';
+  candidateTags.forEach((tag) => {
+    if (tlv[tag] && tlv[tag].length > refCode.length) refCode = tlv[tag];
+  });
+  if (!refCode) {
+    const refMatches = trimmed.match(/[0-9]{12,25}[A-Z0-9]{0,10}|[A-Z0-9]{15,32}/g);
+    refCode = refMatches && refMatches.length
+      ? refMatches.reduce((a, b) => (b.length >= a.length ? b : a), refMatches[0])
+      : trimmed;
+  }
+
   return {
     raw: trimmed,
-    ref: `QR-${refCode.slice(0, 36)}`,
-    displayRef: refCode.slice(0, 28),
+    ref: `QR-${String(refCode).slice(0, 36)}`,
+    displayRef: String(refCode).slice(0, 28),
+    amountFromQr,
     isBankSlipQr: trimmed.startsWith('00') || trimmed.length >= 18
+  };
+}
+
+/**
+ * บีบอัด canvas เป็น WebP (ถ้าเบราว์เซอร์รองรับ) ไม่ได้ค่อย fallback เป็น JPEG
+ * WebP ช่วยลดขนาด data URL ที่เก็บใน Supabase โดยคุณภาพยังอ่านสลิปชัด
+ */
+function canvasToOptimizedDataUrl(canvas, quality = 0.78) {
+  try {
+    const webp = canvas.toDataURL('image/webp', quality);
+    if (webp && webp.startsWith('data:image/webp')) {
+      return { dataUrl: webp, mime: 'image/webp' };
+    }
+  } catch (_) {}
+  return {
+    dataUrl: canvas.toDataURL('image/jpeg', quality),
+    mime: 'image/jpeg'
   };
 }
 
@@ -339,14 +388,16 @@ function compressAndScanSlipImage(file, maxWidth = 880, quality = 0.78) {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const encoded = canvasToOptimizedDataUrl(canvas, quality);
 
         resolve({
-          dataUrl,
+          dataUrl: encoded.dataUrl,
+          mime: encoded.mime,
           qrDetected: Boolean(parsedQr && parsedQr.raw),
           slipQrRef: parsedQr ? parsedQr.ref : fileHash,
           slipQrDisplay: parsedQr ? parsedQr.displayRef : '',
-          slipQrRaw: parsedQr ? parsedQr.raw : fileHash
+          slipQrRaw: parsedQr ? parsedQr.raw : fileHash,
+          amountFromQr: parsedQr && parsedQr.amountFromQr != null ? parsedQr.amountFromQr : null
         });
       };
       img.src = evt.target.result;

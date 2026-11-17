@@ -242,11 +242,24 @@ async function previewBookingSlip(event, category) {
     // เช็คสลิปซ้ำในฐานข้อมูล Supabase ทันที
     const duplicateBooking = await findDuplicateSlipBooking(scanResult.slipQrRef, scanResult.slipQrRaw);
 
+    const expectedAmount = category === 'lantern'
+      ? (parseInt(document.getElementById('lanternQtyInput')?.value, 10) || 1) * 299
+      : (parseInt(document.getElementById('balloonQtyInput')?.value, 10) || 1) * 100;
+    const amountFromQr = scanResult.amountFromQr;
+    let amountMatch = null;
+    if (amountFromQr != null) {
+      amountMatch = Math.abs(Number(amountFromQr) - Number(expectedAmount)) < 0.01;
+    }
+
     APP_STATE.slipScanMeta[category] = {
       qrDetected: scanResult.qrDetected,
       slipQrRef: scanResult.slipQrRef,
       slipQrRaw: scanResult.slipQrRaw,
       slipQrDisplay: scanResult.slipQrDisplay,
+      amountFromQr,
+      expectedAmount,
+      amountMatch,
+      mime: scanResult.mime || 'image/jpeg',
       isDuplicate: Boolean(duplicateBooking),
       duplicateOf: duplicateBooking
     };
@@ -254,7 +267,7 @@ async function previewBookingSlip(event, category) {
     if (duplicateBooking) {
       if (qrStatusEl) {
         qrStatusEl.className = 'slip-status slip-status--error';
-        qrStatusEl.innerHTML = `🚫 ตรวจพบสลิปซ้ำ! สลิปใบนี้เคยถูกใช้จองแล้วในรหัส <span class="underline">${duplicateBooking.id}</span> (${escapeHtml(duplicateBooking.customerName)})`;
+        qrStatusEl.innerHTML = `ตรวจพบสลิปซ้ำ! สลิปใบนี้เคยถูกใช้จองแล้วในรหัส <span class="underline">${duplicateBooking.id}</span> (${escapeHtml(duplicateBooking.customerName)})`;
       }
       if (errBox) {
         errBox.textContent = `ไม่สามารถใช้สลิปใบนี้ได้ เนื่องจากเคยถูกใช้จองแล้วในรหัส ${duplicateBooking.id}`;
@@ -263,16 +276,22 @@ async function previewBookingSlip(event, category) {
       return;
     }
 
+    const fmt = (n) => Number(n).toLocaleString('th-TH');
+    const mimeNote = (scanResult.mime || '').includes('webp') ? 'WebP' : 'JPEG';
     if (scanResult.qrDetected) {
-      if (qrStatusEl) {
-        qrStatusEl.className = 'slip-status slip-status--ok';
-        qrStatusEl.innerHTML = `✅ สแกน QR สลิปธนาคารสำเร็จ (Ref: <span class="font-mono text-amber-300">${escapeHtml(scanResult.slipQrDisplay)}</span>) • ตรวจสอบแล้วไม่ซ้ำ`;
+      let amountLine = `ยอดที่ต้องโอน <strong>${fmt(expectedAmount)}</strong> บาท`;
+      if (amountFromQr != null) {
+        amountLine = amountMatch
+          ? `ยอดจาก QR สลิป <strong>${fmt(amountFromQr)}</strong> บาท ตรงกับยอดจอง`
+          : `ยอดจาก QR สลิป <strong>${fmt(amountFromQr)}</strong> บาท ไม่ตรงยอดจอง ${fmt(expectedAmount)} บาท — แอดมินจะตรวจซ้ำ`;
       }
-    } else {
       if (qrStatusEl) {
-        qrStatusEl.className = 'slip-status slip-status--warn';
-        qrStatusEl.innerHTML = `ℹ️ แนบรูปแล้ว (ไม่พบ QR ในภาพ ระบบใช้รหัสภาพ ${escapeHtml(scanResult.slipQrRef.slice(0, 14))} ตรวจสอบไม่ซ้ำ และรอแอดมินตรวจยอด)`;
+        qrStatusEl.className = amountMatch === false ? 'slip-status slip-status--warn' : 'slip-status slip-status--ok';
+        qrStatusEl.innerHTML = `สแกน QR สลิปสำเร็จ (Ref: <span class="font-mono">${escapeHtml(scanResult.slipQrDisplay)}</span>) · ไม่ซ้ำ · ${amountLine} · เก็บรูปเป็น ${mimeNote}`;
       }
+    } else if (qrStatusEl) {
+      qrStatusEl.className = 'slip-status slip-status--warn';
+      qrStatusEl.innerHTML = `แนบรูปแล้ว (ไม่พบ QR ในภาพ) ใช้รหัสภาพ ${escapeHtml(scanResult.slipQrRef.slice(0, 14))} ตรวจไม่ซ้ำ · ยอดที่ต้องโอน <strong>${fmt(expectedAmount)}</strong> บาท · รอแอดมินเทียบสลิป · เก็บรูปเป็น ${mimeNote}`;
     }
   } catch (err) {
     if (errBox) {
@@ -361,7 +380,7 @@ async function submitCustomerBooking(event, category) {
     // รีเซ็ตฟอร์ม
     document.getElementById(`${category}BookingForm`).reset();
     APP_STATE.compressedSlips[category] = '';
-    APP_STATE.slipScanMeta[category] = { qrDetected: false, slipQrRef: '', slipQrRaw: '', slipQrDisplay: '', isDuplicate: false, duplicateOf: null };
+    APP_STATE.slipScanMeta[category] = { qrDetected: false, slipQrRef: '', slipQrRaw: '', slipQrDisplay: '', amountFromQr: null, expectedAmount: null, amountMatch: null, mime: '', isDuplicate: false, duplicateOf: null };
     const previewWrap = document.getElementById(`${category}SlipPreviewWrap`);
     if (previewWrap) previewWrap.classList.add('hidden');
     if (isLantern) {
@@ -846,18 +865,26 @@ function openSlipInspectorModal(bookingId) {
     : '';
 
   content.innerHTML = `
-    <div class="p-3 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-between">
+    <div class="p-3 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-between gap-3 flex-wrap">
       <div>
         <div class="font-extrabold text-white text-sm">${escapeHtml(b.customerName)} (${escapeHtml(b.phone)})</div>
         <div class="text-slate-400">รหัส: <strong class="text-amber-300">${b.id}</strong> • ${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</div>
       </div>
       <div class="text-right">
-        <div class="text-xs text-slate-400">ยอดที่ต้องโอนเข้าบัญชี น.ส.กนกพิชญ์</div>
+        <div class="text-xs text-slate-400">ยอดที่ต้องโอนเข้าบัญชี น.ส.กนกพิชญ์ ชัยชมภู</div>
         <div class="text-lg font-extrabold text-emerald-400">${Number(b.totalAmount).toLocaleString()} บาท</div>
       </div>
     </div>
 
     ${qrInfoHtml}
+
+    <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-xs text-amber-100 space-y-1.5">
+      <div class="font-extrabold text-amber-300">เช็กลิสต์เทียบสลิป (แอดมิน)</div>
+      <label class="flex items-start gap-2"><input type="checkbox" class="mt-0.5" /> ชื่อบัญชีผู้รับเป็น <strong>น.ส.กนกพิชญ์ ชัยชมภู</strong> / PromptPay ถูกต้อง</label>
+      <label class="flex items-start gap-2"><input type="checkbox" class="mt-0.5" /> ยอดเงินบนสลิปตรง <strong>${Number(b.totalAmount).toLocaleString()} บาท</strong></label>
+      <label class="flex items-start gap-2"><input type="checkbox" class="mt-0.5" /> วันเวลาโอนสมเหตุสมผล และสลิปไม่ถูกครอปจนอ่านไม่ได้</label>
+      <p class="text-[11px] text-amber-200/80 pt-1">ระบบใช้ QR สลิป + กันสลิปซ้ำอัตโนมัติแล้ว — ขั้นอนุมัติยอดยังเป็นสายตาแอดมิน (ไม่พึ่ง OCR เป็นหลัก)</p>
+    </div>
 
     <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center">
       ${b.slipDataUrl
@@ -869,15 +896,15 @@ function openSlipInspectorModal(bookingId) {
     <div class="grid grid-cols-3 gap-2 pt-2">
       <button onclick="adminChangeSlipStatus('${b.id}', 'approved', true)"
         class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
-        ✅ อนุมัติสลิปถูกต้อง
+        อนุมัติสลิปถูกต้อง
       </button>
       <button onclick="adminChangeSlipStatus('${b.id}', 'pending', true)"
         class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs">
-        ⏳ รอตรวจสอบ
+        รอตรวจสอบ
       </button>
       <button onclick="adminChangeSlipStatus('${b.id}', 'rejected', true)"
         class="py-2.5 px-3 rounded-xl bg-red-600/25 hover:bg-red-600/40 text-red-300 border border-red-500/40 font-bold text-xs">
-        ❌ ปฏิเสธ/ยกเลิก
+        ปฏิเสธ/ยกเลิก
       </button>
     </div>
   `;
