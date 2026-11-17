@@ -137,64 +137,50 @@
     }
 
     .hero-bleed {
-      position: relative;
       width: 100vw;
-      left: 50%;
-      right: 50%;
-      margin-left: -50vw;
-      margin-right: -50vw;
-      min-height: clamp(320px, 58vh, 520px);
-      overflow: hidden;
-      margin-bottom: 2rem;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      margin-bottom: 1.75rem;
+      background: #0a1016;
+    }
+    .hero-bleed__frame {
+      position: relative;
+      max-width: 72rem;
+      margin: 0 auto;
+      animation: hero-rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     .hero-bleed__img {
-      position: absolute;
-      inset: 0;
+      display: block;
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 35%;
+      height: auto;
+      max-height: min(78vh, 820px);
+      object-fit: contain;
+      object-position: center top;
+      background: #0a1016;
     }
-    .hero-bleed__veil {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(20, 28, 36, 0.15) 0%, rgba(20, 28, 36, 0.55) 45%, rgba(20, 28, 36, 0.92) 100%);
-    }
-    .hero-bleed__content {
-      position: relative;
-      z-index: 2;
-      max-width: 42rem;
+    .hero-action {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.85rem 1.25rem;
+      max-width: 72rem;
       margin: 0 auto;
-      padding: clamp(2.5rem, 8vw, 5rem) 1.25rem 2.5rem;
-      text-align: center;
+      padding: 1rem 1.25rem 0.25rem;
     }
-  .hero-rise {
-      animation: hero-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+    .hero-action__copy {
+      margin: 0;
+      font-size: 0.95rem;
+      color: rgba(244, 239, 230, 0.88);
+      max-width: 36ch;
+    }
+    .hero-action__copy strong {
+      color: var(--candle);
+      font-weight: 700;
     }
     @keyframes hero-rise {
-      from { opacity: 0.4; transform: translateY(18px); }
+      from { opacity: 0.35; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
-    }
-    .hero-brand {
-      font-size: clamp(1.35rem, 4vw, 2rem);
-      color: var(--paper);
-      margin: 0 0 0.35rem;
-    }
-    .hero-headline {
-      font-size: clamp(1.5rem, 4.5vw, 2.35rem);
-      color: var(--candle);
-      margin: 0 0 0.65rem;
-      animation: lantern-drift 7s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
-    }
-    @keyframes lantern-drift {
-      from { transform: translateY(0); }
-      to { transform: translateY(-6px); }
-    }
-    .hero-lede {
-      font-size: clamp(0.9rem, 2.2vw, 1.05rem);
-      color: rgba(244, 239, 230, 0.9);
-      margin: 0 auto 1.25rem;
-      max-width: 36ch;
     }
     .btn-cta {
       min-height: 3rem;
@@ -207,6 +193,7 @@
       font-size: 1rem;
       cursor: pointer;
       box-shadow: var(--shadow-river);
+      flex-shrink: 0;
     }
     .btn-cta:hover { background: #d3953a; }
     .btn-cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -550,7 +537,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      .hero-rise, .hero-headline { animation: none; }
+      .hero-bleed__frame { animation: none; }
     }
 
     #printableAdminReportArea { display: none; }
@@ -590,13 +577,12 @@
     <!-- TAB 1: พรีออเดอร์ปล่อยโคมลอย (24-25 พฤศจิกายน 2569) -->
     <!-- =================================================================== -->
     <section id="tabSection-lantern">
-      <div class="hero-bleed" aria-label="ภาพบรรยากาศปล่อยโคมลอย">
-        <img class="hero-bleed__img" src="./387004.jpg" alt="พรีออเดอร์ปล่อยโคมลอย เทศกาลท่องเที่ยวเมืองพร้าว 24–25 พฤศจิกายน 2569" width="1920" height="1080" />
-        <div class="hero-bleed__veil"></div>
-        <div class="hero-bleed__content hero-rise">
-          <p class="hero-brand font-display">Mae Ping Candle River · เทศกาลท่องเที่ยวเมืองพร้าว 2569</p>
-          <h2 class="hero-headline font-display">พรีออเดอร์ปล่อยโคมลอย</h2>
-          <p class="hero-lede">บรรยากาศลอยกระทงล้านนาริมทุ่งนาและสายน้ำแม่ปิง ณ โฮงชาฮักมี วันที่ 24–25 พฤศจิกายน 2569 — ไม่ต้องสมัครสมาชิก จองแล้วรับ E-Ticket ทันที</p>
+      <div class="hero-bleed" aria-label="โปสเตอร์พรีออเดอร์ปล่อยโคมลอย">
+        <div class="hero-bleed__frame">
+          <img class="hero-bleed__img" src="./387004.jpg" alt="พรีออเดอร์ปล่อยโคมลอย เทศกาลท่องเที่ยวเมืองพร้าว 24–25 พฤศจิกายน 2569 โคมละ 299 บาท ต่อ 2 ท่าน ณ โฮงชาฮักมี" width="1920" height="1080" />
+        </div>
+        <div class="hero-action">
+          <p class="hero-action__copy">จองออนไลน์ได้ทันที ไม่ต้องสมัครสมาชิก · <strong>โคมละ 299 บาท / 2 ท่าน</strong></p>
           <button type="button" class="btn-cta" onclick="document.getElementById('lanternBookingFormCard').scrollIntoView({behavior:'smooth',block:'start'})">เริ่มจองโคมลอย</button>
         </div>
       </div>
