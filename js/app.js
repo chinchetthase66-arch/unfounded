@@ -813,23 +813,23 @@ function renderAdminBookingsTable() {
 
     return `
       <tr class="hover:bg-slate-800/50 transition">
-        <td class="py-3 px-2.5 font-mono font-extrabold text-amber-400">${b.id}</td>
-        <td class="py-3 px-2.5">
+        <td class="py-3 px-2.5 font-mono font-extrabold text-amber-400" data-label="รหัสจอง">${b.id}</td>
+        <td class="py-3 px-2.5" data-label="วันงาน">
           <div class="font-bold text-white">${isLantern ? '🏮 โคมลอย' : '🎈 มินิบอลลูน'}</div>
           <div class="text-[11px] text-slate-400">${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</div>
         </td>
-        <td class="py-3 px-2.5">
+        <td class="py-3 px-2.5" data-label="ลูกค้า">
           <div class="font-bold text-white">${escapeHtml(b.customerName)}</div>
           <div class="text-[11px] text-slate-400">${escapeHtml(b.phone)} ${b.note ? `• ${escapeHtml(b.note)}` : ''}</div>
         </td>
-        <td class="py-3 px-2.5 font-bold text-slate-200">
+        <td class="py-3 px-2.5 font-bold text-slate-200" data-label="จำนวน">
           ${b.quantity} ${isLantern ? 'โคม' : 'ใบ'} <span class="text-slate-400 font-normal">(${b.attendees} ท่าน)</span>
         </td>
-        <td class="py-3 px-2.5 font-extrabold text-emerald-400">${Number(b.totalAmount).toLocaleString()}฿</td>
-        <td class="py-3 px-2.5">${slipBtn}</td>
-        <td class="py-3 px-2.5">${statusPill}</td>
-        <td class="py-3 px-2.5">${checkinBtn}</td>
-        <td class="py-3 px-2.5 text-right space-x-1">
+        <td class="py-3 px-2.5 font-extrabold text-emerald-400" data-label="ยอดเงิน">${Number(b.totalAmount).toLocaleString()}฿</td>
+        <td class="py-3 px-2.5" data-label="สลิป">${slipBtn}</td>
+        <td class="py-3 px-2.5" data-label="สถานะ">${statusPill}</td>
+        <td class="py-3 px-2.5" data-label="เช็คอิน">${checkinBtn}</td>
+        <td class="py-3 px-2.5 text-right booking-actions">
           ${b.paymentStatus !== 'approved' ? `
             <button onclick="adminChangeSlipStatus('${b.id}', 'approved')" class="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold" title="อนุมัติสลิป">✓ อนุมัติ</button>
           ` : ''}

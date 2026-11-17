@@ -63,7 +63,7 @@
       position: sticky;
       top: 0;
       z-index: 40;
-      background: rgba(20, 28, 36, 0.94);
+      background: var(--night);
       border-bottom: 1px solid rgba(201, 137, 42, 0.22);
     }
 
@@ -86,10 +86,12 @@
       line-height: 1.25;
     }
     .brand-lockup__meta {
-      font-size: 0.72rem;
-      color: rgba(217, 224, 214, 0.78);
-      margin-top: 0.15rem;
+      font-size: 0.78rem;
+      color: rgba(217, 224, 214, 0.88);
+      margin: 0.2rem 0 0;
+      line-height: 1.4;
     }
+    .brand-lockup__phone { display: block; }
 
     .site-nav {
       display: flex;
@@ -638,6 +640,74 @@
     .admin-table th { color: rgba(217, 224, 214, 0.65); padding: 0.65rem 0.35rem; border-bottom: 1px solid rgba(217, 224, 214, 0.12); }
     .admin-table td { padding: 0.55rem 0.35rem; border-bottom: 1px solid rgba(217, 224, 214, 0.08); color: var(--mist); }
 
+    .checkin-row { display: flex; gap: 0.5rem; align-items: stretch; }
+    .checkin-row input { flex: 1; min-width: 0; }
+    .checkin-row button { flex-shrink: 0; }
+
+    @media (max-width: 700px) {
+      .site-header__inner { padding: 0.55rem 0.85rem 0.7rem; align-items: stretch; }
+      .brand-lockup { max-width: none; width: 100%; }
+      .brand-lockup__title { font-size: 1.2rem; line-height: 1.3; }
+      .brand-lockup__place { display: none; }
+      .site-nav { width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.4rem; }
+      .nav-btn { width: 100%; min-height: 2.75rem; padding: 0.4rem 0.3rem; font-size: 0.78rem; line-height: 1.2; text-align: center; }
+      html { scroll-padding-top: 8.5rem; }
+      #balloonBookingFormCard, .paper-surface, .lookup-panel { scroll-margin-top: 8.5rem; }
+      .hero-action { padding-left: 1rem; padding-right: 1rem; }
+      .hero-action .btn-cta { width: 100%; }
+      .admin-command { width: 100%; }
+      .admin-command .admin-btn { flex: 1 1 calc(50% - 0.45rem); justify-content: center; min-height: 2.75rem; font-size: 0.85rem; text-align: center; }
+      .admin-zone h2.font-display {
+        font-family: 'Prompt', sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        line-height: 1.35;
+      }
+      .admin-filters, .admin-exports { width: 100%; display: flex; flex-direction: column; align-items: stretch; }
+      .admin-filters select, .admin-filters input, .admin-exports button { width: 100%; min-height: 2.75rem; font-size: 1rem; }
+      .checkin-row { flex-direction: column; }
+      .checkin-row input, .checkin-row button { width: 100%; min-height: 2.75rem; font-size: 1rem; }
+      .admin-panel__head { flex-wrap: wrap; align-items: flex-start; gap: 0.35rem; }
+      .booking-scroll { overflow: visible; }
+      .booking-table thead { display: none; }
+      .booking-table, .booking-table tbody, .booking-table tr, .booking-table td { display: block; width: auto; }
+      .booking-table tr {
+        background: var(--night);
+        border: 1px solid rgba(217, 224, 214, 0.14);
+        border-radius: 14px;
+        padding: 0.75rem 0.85rem;
+        margin-bottom: 0.75rem;
+      }
+      .booking-table td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+        padding: 0.45rem 0;
+        border: 0;
+        text-align: left;
+        font-size: 0.95rem;
+      }
+      .booking-table td::before {
+        content: attr(data-label);
+        color: rgba(217, 224, 214, 0.7);
+        font-weight: 600;
+        font-size: 0.75rem;
+      }
+      .booking-table td[colspan]::before { content: none; }
+      .booking-table td[colspan] { display: block; text-align: center; }
+      .booking-table td:first-child { font-size: 1.05rem; }
+      .booking-table td.booking-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 0.4rem;
+        padding-top: 0.55rem;
+      }
+      .booking-table td.booking-actions::before { content: none; }
+      .booking-table td.booking-actions button { min-height: 2.75rem; padding: 0.4rem 0.7rem; font-size: 0.85rem; }
+    }
+
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -709,7 +779,7 @@
     <div class="site-header__inner">
       <div class="brand-lockup" onclick="switchMainTab('balloon')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')switchMainTab('balloon')">
         <h1 class="brand-lockup__title font-display">เทศกาลท่องเที่ยวเมืองพร้าว 2569</h1>
-        <p class="brand-lockup__meta">จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท · ณ โฮงชาฮักมี · โทร. 081-669-6653 (คุณฝ้าย)</p>
+        <p class="brand-lockup__meta"><span class="brand-lockup__place">จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท · ณ โฮงชาฮักมี</span><span class="brand-lockup__phone">โทร. 081-669-6653 (คุณฝ้าย)</span></p>
       </div>
       <nav class="site-nav" aria-label="เมนูหลัก">
         <button type="button" id="navBtn-balloon" onclick="switchMainTab('balloon')" class="nav-btn nav-active">บัตรมินิบอลลูน 20–21 พ.ย.</button>
@@ -863,7 +933,7 @@
           <p style="font-size:0.72rem;font-weight:600;color:rgba(217,224,214,0.65);margin:0;">Admin — บัตรชมมินิบอลลูน</p>
           <h2 class="font-display" style="font-size:1.25rem;color:var(--candle);margin:0.35rem 0 0;">ศูนย์ควบคุมจำหน่ายบัตรชมมินิบอลลูน</h2>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.45rem;">
+        <div class="admin-command" style="display:flex;flex-wrap:wrap;gap:0.45rem;">
           <button type="button" onclick="refreshAdminPortal()" class="admin-btn admin-btn--quiet">รีเฟรช</button>
           <button type="button" onclick="openWalkinPosModal()" class="admin-btn admin-btn--forest">บันทึกขายหน้างาน</button>
           <a href="./tickets.html" class="admin-btn admin-btn--primary" style="text-decoration:none;display:inline-flex;align-items:center;" title="สตูดิโอพิมพ์ตั๋วแมนนวลแบบตั๋วรถขายหน้างาน (Admin เท่านั้น)">พิมพ์ตั๋วมินิบอลลูน</a>
@@ -879,7 +949,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- ตารางคำนวณสิ่งของที่สตาฟต้องจัดเตรียมหน้างานอัตโนมัติ (Inventory Calculator) -->
         <div class="lg:col-span-7 admin-panel space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="admin-panel__head flex items-center justify-between">
             <h3 class="text-sm md:text-base font-extrabold text-emerald-400">
               สรุปยอดบัตรชมมินิบอลลูน (20–21 พ.ย. 2569)
             </h3>
@@ -900,7 +970,7 @@
           <p class="text-xs text-slate-400">
             พิมพ์รหัสจอง (เช่น <code class="text-amber-300">MB20-0001</code>) หรือเบอร์โทร 4 ตัวท้ายเพื่อยืนยันเข้าชมมินิบอลลูน
           </p>
-          <div class="flex gap-2">
+          <div class="checkin-row">
             <input id="quickCheckinInput" type="text" placeholder="รหัสจอง หรือ เบอร์โทรลูกค้า..."
               onkeydown="if(event.key==='Enter'){event.preventDefault();performQuickCheckinSearch();}"
               class="flex-grow px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-400" />
@@ -916,7 +986,7 @@
       <!-- โมดูลที่ 3 & โมดูลที่ 7: ตารางจัดการรายการจอง ตรวจสลิป และปุ่ม Export / พิมพ์ใบลงทะเบียน -->
       <div class="admin-panel space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="admin-filters flex flex-wrap items-center gap-2">
             <select id="adminFilterCategoryDate" onchange="renderAdminBookingsTable()"
               class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white">
               <option value="all">📅 วันที่ทั้งหมด</option>
@@ -940,7 +1010,7 @@
           </div>
 
           <!-- ปุ่ม Export Excel & พิมพ์ใบรายชื่อหน้างาน -->
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="admin-exports flex flex-wrap items-center gap-2">
             <button onclick="exportBookingsToCsv()"
               class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold shadow">
               📥 Export Excel (CSV ภาษาไทย)
@@ -956,8 +1026,8 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
+        <div class="booking-scroll overflow-x-auto">
+          <table class="booking-table w-full text-left border-collapse text-xs">
             <thead>
               <tr class="border-b border-slate-800 text-slate-400 uppercase">
                 <th class="py-3 px-2.5">รหัสจอง</th>
