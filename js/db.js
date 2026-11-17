@@ -14,8 +14,13 @@ const STORAGE_KEYS = {
   BOOKINGS_CACHE: 'phrao_festival_2569_bookings_v1',
   SETTINGS_CACHE: 'phrao_festival_2569_settings_v1',
   ADMIN_AUTH: 'phrao_festival_2569_admin_session_v1',
-  ADMIN_CREDS: 'phrao_festival_2569_admin_creds_v1'
+  ADMIN_CREDS: 'phrao_festival_2569_admin_creds_v1',
+  ADMIN_LOGIN_CACHE: 'phrao_festival_2569_admin_login_v2'
 };
+
+const ADMIN_LOGIN_SETTING_KEY = 'admin_login';
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_PASSWORD = 'phrao2569';
 
 const DEFAULT_SETTINGS = {
   quota_2026_11_24: 200,
@@ -570,6 +575,112 @@ async function deleteBookingRecord(id) {
   const currentList = getLocalBookingsCache().filter(b => b.id !== id);
   saveLocalBookingsCache(currentList);
   return true;
+}
+
+/**
+ * แฮชรหัสผ่านแอดมินก่อนเก็บขึ้นคลาวด์ (ไม่เก็บรหัสแบบตัวอักษรตรง)
+ */
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(String(text));
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function readCachedAdminLogin() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ADMIN_LOGIN_CACHE);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.username && parsed.password_hash) return parsed;
+  } catch (_) {}
+  return null;
+}
+
+function writeCachedAdminLogin(record) {
+  localStorage.setItem(STORAGE_KEYS.ADMIN_LOGIN_CACHE, JSON.stringify({
+    username: record.username,
+    password_hash: record.password_hash
+  }));
+  localStorage.removeItem(STORAGE_KEYS.ADMIN_CREDS);
+}
+
+async function upsertAdminLogin(record) {
+  await supabaseRestFetch('festival_settings', {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({
+      key: ADMIN_LOGIN_SETTING_KEY,
+      value: {
+        username: record.username,
+        password_hash: record.password_hash
+      },
+      updated_at: new Date().toISOString()
+    })
+  });
+  writeCachedAdminLogin(record);
+}
+
+/**
+ * อ่านชื่อผู้ใช้และแฮชรหัสผ่านแอดมินจาก Supabase
+ * ถ้าเครื่องนี้เคยเปลี่ยนรหัสไว้ใน localStorage จะอัปโหลดครั้งเดียวให้ทุกเครื่องใช้ร่วมกัน
+ */
+async function fetchAdminLoginRecord() {
+  try {
+    const rows = await supabaseRestFetch(
+      `festival_settings?key=eq.${ADMIN_LOGIN_SETTING_KEY}&select=value`
+    );
+    const value = rows && rows[0] && rows[0].value;
+    if (value && value.username && value.password_hash) {
+      writeCachedAdminLogin(value);
+      return value;
+    }
+  } catch (err) {
+    console.warn('Admin login cloud read fallback:', err.message);
+    const cached = readCachedAdminLogin();
+    if (cached) return cached;
+  }
+
+  try {
+    const legacyRaw = localStorage.getItem(STORAGE_KEYS.ADMIN_CREDS);
+    if (legacyRaw) {
+      const legacy = JSON.parse(legacyRaw);
+      if (legacy && legacy.password) {
+        const record = {
+          username: String(legacy.username || DEFAULT_ADMIN_USERNAME).trim() || DEFAULT_ADMIN_USERNAME,
+          password_hash: await sha256Hex(String(legacy.password))
+        };
+        try {
+          await upsertAdminLogin(record);
+        } catch (err) {
+          console.warn('Admin login migrate pending:', err.message);
+          writeCachedAdminLogin(record);
+        }
+        return record;
+      }
+    }
+  } catch (_) {}
+
+  return {
+    username: DEFAULT_ADMIN_USERNAME,
+    password_hash: await sha256Hex(DEFAULT_ADMIN_PASSWORD)
+  };
+}
+
+async function verifyAdminLogin(username, password) {
+  const record = await fetchAdminLoginRecord();
+  const hash = await sha256Hex(String(password || '').trim());
+  const nameOk = String(username || '').trim().toLowerCase() === String(record.username || '').trim().toLowerCase();
+  return nameOk && hash === record.password_hash;
+}
+
+async function saveAdminPassword(newPassword) {
+  const current = await fetchAdminLoginRecord();
+  const record = {
+    username: current.username || DEFAULT_ADMIN_USERNAME,
+    password_hash: await sha256Hex(String(newPassword).trim())
+  };
+  await upsertAdminLogin(record);
+  return record;
 }
 
 /**

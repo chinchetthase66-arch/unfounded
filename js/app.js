@@ -546,12 +546,11 @@ function isAdminLoggedIn() {
   return sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'authenticated';
 }
 
-function getAdminCredentials() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_CREDS);
-    if (saved) return JSON.parse(saved);
-  } catch (_) {}
-  return { username: 'admin', password: 'phrao2569' };
+function clearAdminLoginFields() {
+  const userEl = document.getElementById('adminUsernameInput');
+  const passEl = document.getElementById('adminPasswordInput');
+  if (userEl) userEl.value = '';
+  if (passEl) passEl.value = '';
 }
 
 function handleAdminNavClick() {
@@ -560,9 +559,11 @@ function handleAdminNavClick() {
   } else {
     const modal = document.getElementById('adminLoginModal');
     document.getElementById('adminLoginError').classList.add('hidden');
-    document.getElementById('adminPasswordInput').value = '';
+    clearAdminLoginFields();
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    const userEl = document.getElementById('adminUsernameInput');
+    if (userEl) userEl.focus();
   }
 }
 
@@ -572,20 +573,43 @@ function closeAdminLoginModal() {
   modal.classList.remove('flex');
 }
 
-function submitAdminLogin(event) {
+async function submitAdminLogin(event) {
   event.preventDefault();
-  const user = document.getElementById('adminUsernameInput').value.trim();
-  const pass = document.getElementById('adminPasswordInput').value.trim();
-  const creds = getAdminCredentials();
+  const form = event.target;
+  const userEl = document.getElementById('adminUsernameInput');
+  const passEl = document.getElementById('adminPasswordInput');
+  const err = document.getElementById('adminLoginError');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const user = userEl.value.trim();
+  const pass = passEl.value.trim();
 
-  if (user.toLowerCase() === creds.username.toLowerCase() && pass === creds.password) {
-    sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'authenticated');
-    closeAdminLoginModal();
-    switchMainTab('admin');
-  } else {
-    const err = document.getElementById('adminLoginError');
+  err.classList.add('hidden');
+  if (!user || !pass) {
+    err.textContent = 'กรอกชื่อผู้ใช้และรหัสผ่าน';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  if (submitBtn) submitBtn.disabled = true;
+  try {
+    const ok = await verifyAdminLogin(user, pass);
+    if (ok) {
+      sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'authenticated');
+      clearAdminLoginFields();
+      closeAdminLoginModal();
+      switchMainTab('admin');
+      return;
+    }
     err.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
     err.classList.remove('hidden');
+    passEl.value = '';
+    passEl.focus();
+  } catch (loginErr) {
+    err.textContent = 'ตรวจสอบกับฐานข้อมูลไม่สำเร็จ กรุณาลองอีกครั้ง';
+    err.classList.remove('hidden');
+    console.warn('Admin login check failed:', loginErr.message);
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 }
 
@@ -1233,8 +1257,13 @@ async function submitAdminSettings(event) {
 
   const newPass = document.getElementById('settingNewAdminPass').value.trim();
   if (newPass) {
-    const creds = getAdminCredentials();
-    localStorage.setItem(STORAGE_KEYS.ADMIN_CREDS, JSON.stringify({ ...creds, password: newPass }));
+    try {
+      await saveAdminPassword(newPass);
+    } catch (err) {
+      console.warn('Admin password cloud save failed:', err.message);
+      window.alert('บันทึกรหัสผ่านขึ้นคลาวด์ไม่สำเร็จ ทุกเครื่องจะยังใช้รหัสเดิมอยู่ กรุณาลองอีกครั้ง');
+      return;
+    }
   }
 
   APP_STATE.settings = await saveFestivalSettings(nextSettings);
