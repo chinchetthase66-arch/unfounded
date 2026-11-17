@@ -7,13 +7,32 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Charmonman:wght@400;700&family=Noto+Serif+Thai:wght@400;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Prompt', 'Sarabun', sans-serif;
-      background-color: #0F172A;
-      color: #F8FAFC;
+    :root {
+      --ink: #1A1410;
+      --night: #141C24;
+      --paper: #F4EFE6;
+      --candle: #C9892A;
+      --ember: #9A4E1C;
+      --forest: #2F4A3A;
+      --mist: #D9E0D6;
     }
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: var(--night);
+      color: var(--mist);
+    }
+    .ticket-shell-header {
+      background: rgba(20, 28, 36, 0.96);
+      border-bottom: 1px solid rgba(201, 137, 42, 0.22);
+    }
+    .ticket-shell-panel {
+      background: #1e2832;
+      border: 1px solid rgba(217, 224, 214, 0.12);
+      border-radius: 14px;
+    }
+    .font-display { font-family: 'Charmonman', 'Noto Serif Thai', serif; font-weight: 700; }
 
     /* จำลองหน้ากระดาษ A4 บนหน้าจอ */
     .a4-sheet {
@@ -162,28 +181,28 @@
 <body class="min-h-screen pb-16">
 
   <!-- แถบควบคุมด้านบน (ซ่อนอัตโนมัติเวลาสั่งพิมพ์) -->
-  <header class="no-print bg-slate-900/95 border-b border-amber-500/30 sticky top-0 z-40 backdrop-blur-md">
+  <header class="no-print ticket-shell-header sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <a href="./index.html" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-sm font-semibold border border-slate-700 transition">
-          ← กลับหน้าเว็บหลัก / หน้า Admin
+        <a href="./index.html" class="inline-flex items-center px-3.5 py-2 rounded-xl text-sm font-semibold border transition" style="background:#1e2832;color:var(--candle);border-color:rgba(201,137,42,0.35);">
+          กลับหน้าเว็บหลัก
         </a>
         <div>
-          <h1 class="text-base md:text-lg font-bold text-amber-400 flex items-center gap-2">
-            🎟️ สตูดิโอพิมพ์ตั๋วชมมินิบอลลูน คนละ 100 บาท (แบบตั๋วรถขายหน้างาน)
+          <h1 class="text-base md:text-lg font-display" style="color:var(--candle);margin:0;">
+            สตูดิโอพิมพ์ตั๋วชมมินิบอลลูน คนละ 100 บาท (แบบตั๋วรถ)
           </h1>
-          <p class="text-xs text-slate-400">
+          <p class="text-xs" style="color:rgba(217,224,214,0.75);margin:0.25rem 0 0;">
             เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20–21 พฤศจิกายน 2569 เวลา 18.00 – 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
           </p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition">
-          🖨️ สั่งพิมพ์ตั๋ว A4 / บันทึกเป็น PDF
+        <button type="button" onclick="window.print()" class="inline-flex items-center px-5 py-2.5 rounded-xl font-bold text-sm border-0 cursor-pointer" style="background:var(--candle);color:var(--ink);">
+          สั่งพิมพ์ตั๋ว A4 / PDF
         </button>
-        <button onclick="openRecordSalesModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition">
-          💵 บันทึกยอดขายตั๋วเข้าหน้ารายงาน Admin
+        <button type="button" onclick="openRecordSalesModal()" class="inline-flex items-center px-4 py-2.5 rounded-xl font-bold text-sm border-0 cursor-pointer" style="background:var(--forest);color:var(--paper);">
+          บันทึกยอดขายเข้า Admin
         </button>
       </div>
     </div>
@@ -191,7 +210,7 @@
 
   <!-- แผงตั้งค่าการสร้างตั๋ว (ซ่อนเวลาสั่งพิมพ์) -->
   <section class="no-print max-w-7xl mx-auto px-4 pt-6 pb-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+    <div class="ticket-shell-panel p-5">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
         <!-- เลขเริ่มต้น -->
         <div>
@@ -268,7 +287,7 @@
   <main id="sheetsContainer" class="px-2 md:px-6 overflow-x-auto"></main>
 
   <!-- ส่วนท้ายเครดิตผู้พัฒนา (ซ่อนเวลาพิมพ์ตั๋ว) -->
-  <footer class="no-print max-w-7xl mx-auto px-4 mt-8 text-center text-xs text-slate-400 space-y-1">
+  <footer class="no-print max-w-7xl mx-auto px-4 mt-8 text-center text-xs space-y-1" style="color:rgba(217,224,214,0.75);">
     <p class="font-semibold text-amber-300">เทศกาลท่องเที่ยวเมืองพร้าว 2569 • ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ • โทร. 081-669-6653 (คุณฝ้าย)</p>
     <p>Developed by <span class="text-white font-bold">S.Y. Interactive Development Limited</span></p>
   </footer>

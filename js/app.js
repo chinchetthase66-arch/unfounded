@@ -73,11 +73,11 @@ function switchMainTab(tabName) {
     }
     if (btn) {
       if (t === tabName) {
-        btn.className = 'px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20';
+        btn.className = 'nav-btn nav-active';
       } else if (t === 'admin') {
-        btn.className = 'px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40';
+        btn.className = 'nav-btn nav-admin';
       } else {
-        btn.className = 'px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700';
+        btn.className = 'nav-btn nav-idle';
       }
     }
   });
@@ -110,20 +110,20 @@ function updateCustomerQuotaBadges() {
   if (badge24) {
     if (!APP_STATE.settings.open_2026_11_24 || rem24 <= 0) {
       badge24.textContent = 'เต็มแล้ว (Sold Out)';
-      badge24.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30';
+      badge24.className = 'quota-badge quota-badge--sold';
     } else {
       badge24.textContent = `ว่าง ${rem24} โคม`;
-      badge24.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      badge24.className = 'quota-badge quota-badge--open';
     }
   }
 
   if (badge25) {
     if (!APP_STATE.settings.open_2026_11_25 || rem25 <= 0) {
       badge25.textContent = 'เต็มแล้ว (Sold Out)';
-      badge25.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30';
+      badge25.className = 'quota-badge quota-badge--sold';
     } else {
       badge25.textContent = `ว่าง ${rem25} โคม`;
-      badge25.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      badge25.className = 'quota-badge quota-badge--open';
     }
   }
 }
@@ -137,9 +137,9 @@ function selectLanternDate(dateStr) {
     const btn = document.getElementById(`lanternDateBtn-${d}`);
     if (!btn) return;
     if (d === dateStr) {
-      btn.className = 'text-left p-4 rounded-2xl border-2 border-amber-400 bg-amber-500/15 transition relative';
+      btn.className = 'date-btn date-active';
     } else {
-      btn.className = 'text-left p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/60 hover:border-slate-600 transition relative';
+      btn.className = 'date-btn date-idle';
     }
   });
 }
@@ -174,9 +174,9 @@ function selectBalloonDate(dateStr) {
     const btn = document.getElementById(`balloonDateBtn-${d}`);
     if (!btn) return;
     if (d === dateStr) {
-      btn.className = 'text-left p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-500/15 transition';
+      btn.className = 'date-btn date-active date-active--balloon';
     } else {
-      btn.className = 'text-left p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/60 transition';
+      btn.className = 'date-btn date-idle date-idle--balloon';
     }
   });
 }
@@ -229,7 +229,7 @@ async function previewBookingSlip(event, category) {
   if (!file) return;
 
   if (qrStatusEl) {
-    qrStatusEl.className = 'text-[11px] text-amber-300 font-semibold';
+    qrStatusEl.className = 'slip-status slip-status--info';
     qrStatusEl.textContent = '🔍 กำลังสแกนอ่าน QR สลิปธนาคารและตรวจสอบสลิปซ้ำ...';
   }
   if (wrap) wrap.classList.remove('hidden');
@@ -253,7 +253,7 @@ async function previewBookingSlip(event, category) {
 
     if (duplicateBooking) {
       if (qrStatusEl) {
-        qrStatusEl.className = 'text-xs font-extrabold text-red-300 bg-red-950/90 border border-red-500 rounded-lg p-2';
+        qrStatusEl.className = 'slip-status slip-status--error';
         qrStatusEl.innerHTML = `🚫 ตรวจพบสลิปซ้ำ! สลิปใบนี้เคยถูกใช้จองแล้วในรหัส <span class="underline">${duplicateBooking.id}</span> (${escapeHtml(duplicateBooking.customerName)})`;
       }
       if (errBox) {
@@ -265,12 +265,12 @@ async function previewBookingSlip(event, category) {
 
     if (scanResult.qrDetected) {
       if (qrStatusEl) {
-        qrStatusEl.className = 'text-[11px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg p-1.5';
+        qrStatusEl.className = 'slip-status slip-status--ok';
         qrStatusEl.innerHTML = `✅ สแกน QR สลิปธนาคารสำเร็จ (Ref: <span class="font-mono text-amber-300">${escapeHtml(scanResult.slipQrDisplay)}</span>) • ตรวจสอบแล้วไม่ซ้ำ`;
       }
     } else {
       if (qrStatusEl) {
-        qrStatusEl.className = 'text-[11px] font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/30 rounded-lg p-1.5';
+        qrStatusEl.className = 'slip-status slip-status--warn';
         qrStatusEl.innerHTML = `ℹ️ แนบรูปแล้ว (ไม่พบ QR ในภาพ ระบบใช้รหัสภาพ ${escapeHtml(scanResult.slipQrRef.slice(0, 14))} ตรวจสอบไม่ซ้ำ และรอแอดมินตรวจยอด)`;
       }
     }
