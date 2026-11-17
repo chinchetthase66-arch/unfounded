@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>พรีออเดอร์ปล่อยโคมลอย & บัตรชมมินิบอลลูน — เทศกาลท่องเที่ยวเมืองพร้าว 2569 ณ โฮงชาฮักมี</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Prompt', 'Sarabun', sans-serif;
+      background-color: #0B132B;
+      color: #F8FAFC;
+    }
+
+    /* พื้นหลังประกายโคมลอยยามค่ำคืน */
+    .lantern-sky-bg {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(245, 158, 11, 0.20) 0%, transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(251, 191, 36, 0.16) 0%, transparent 35%),
+        radial-gradient(circle at 50% 80%, rgba(217, 119, 6, 0.12) 0%, transparent 50%),
+        linear-gradient(180deg, #070C1E 0%, #0F172A 55%, #111827 100%);
+    }
+
+    .gold-glow-border {
+      box-shadow: 0 0 28px rgba(245, 158, 11, 0.18);
+    }
+
+    /* สำหรับการพิมพ์ใบรายชื่อลงทะเบียนหน้างานและรายงานสรุปยอดผู้บริหาร (A4) */
+    #printableAdminReportArea {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      #printableAdminReportArea {
+        display: block !important;
+        background: #FFFFFF !important;
+        color: #000000 !important;
+        padding: 10mm;
+      }
+    }
+  </style>
+</head>
+<body class="lantern-sky-bg min-h-screen flex flex-col justify-between">
+
+  <!-- แถบเมนูหลักด้านบน (Top Navigation Bar) -->
+  <header class="no-print sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-amber-500/25">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- โลโก้และชื่อเทศกาล -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchMainTab('lantern')">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-xl shadow-lg shadow-amber-500/20">
+          🏮
+        </div>
+        <div>
+          <div class="text-sm md:text-base font-extrabold text-amber-300 tracking-tight">
+            เทศกาลท่องเที่ยวเมืองพร้าว 2569
+          </div>
+          <div class="text-[11px] text-slate-400">
+            ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ • โทร. 081-669-6653
+          </div>
+        </div>
+      </div>
+
+      <!-- ปุ่มสลับโหมดใช้งาน -->
+      <nav class="flex flex-wrap items-center gap-1.5 md:gap-2">
+        <button id="navBtn-lantern" onclick="switchMainTab('lantern')"
+          class="px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20">
+          🏮 จองโคมลอย (24-25 พ.ย.)
+        </button>
+        <button id="navBtn-balloon" onclick="switchMainTab('balloon')"
+          class="px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700">
+          🎈 บัตรมินิบอลลูน (20-21 พ.ย.)
+        </button>
+        <button id="navBtn-lookup" onclick="switchMainTab('lookup')"
+          class="px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700">
+          🎫 ค้นหาบัตรของฉัน
+        </button>
+        <a href="./tickets.html"
+          class="px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-emerald-900/70 hover:bg-emerald-800 text-emerald-200 border border-emerald-600/40">
+          🖨️ พิมพ์ตั๋วรถ 100฿
+        </a>
+        <button id="navBtn-admin" onclick="handleAdminNavClick()"
+          class="px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40">
+          🔒 แอดมิน (Admin)
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- เนื้อหาหลักของเว็บไซต์ -->
+  <main class="no-print flex-grow max-w-7xl w-full mx-auto px-4 py-6 md:py-8">
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: พรีออเดอร์ปล่อยโคมลอย (24-25 พฤศจิกายน 2569) -->
+    <!-- =================================================================== -->
+    <section id="tabSection-lantern" class="space-y-8">
+      <!-- Hero Banner & โปสเตอร์งานโคมลอย -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center bg-slate-900/90 border border-amber-500/30 rounded-3xl p-5 md:p-7 gold-glow-border">
+        <div class="lg:col-span-7 space-y-4">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-300 text-xs font-bold">
+            ✨ เปิดรับพรีออเดอร์ออนไลน์ • ไม่ต้องสมัครสมาชิก จองแล้วรับ E-Ticket ทันที
+          </div>
+          <h1 class="text-2xl md:text-4xl font-extrabold text-white leading-tight">
+            พรีออเดอร์ปล่อยโคมลอย <span class="text-amber-400">เทศกาลท่องเที่ยวเมืองพร้าว</span>
+          </h1>
+          <p class="text-sm md:text-base text-slate-300 leading-relaxed">
+            ร่วมสืบสานประเพณีปล่อยโคมลอยสุดโรแมนติกท่ามกลางขุนเขาและสายน้ำ
+            <strong class="text-amber-300">ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</strong>
+            ระหว่างวันที่ <strong class="text-white">24 – 25 พฤศจิกายน 2569</strong>
+          </p>
+
+          <!-- ป้ายราคาและกำหนดการ -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="bg-gradient-to-br from-amber-500/20 to-orange-600/15 border border-amber-400/50 rounded-2xl p-4">
+              <div class="text-xs font-semibold text-amber-200">ราคาพรีออเดอร์สุดคุ้ม</div>
+              <div class="text-2xl md:text-3xl font-extrabold text-amber-400 mt-0.5">
+                โคมละ 299 บาท <span class="text-base font-bold text-white">/ 2 ท่าน</span>
+              </div>
+              <div class="text-[11px] text-amber-200/80 mt-1">
+                * 1 โคม สามารถเข้างานและร่วมปล่อยโคมได้ 2 ท่าน
+              </div>
+            </div>
+
+            <div class="bg-slate-800/85 border border-slate-700 rounded-2xl p-4 space-y-1.5">
+              <div class="text-xs font-bold text-amber-300">🕒 กำหนดการวันงาน (24–25 พ.ย. 69)</div>
+              <div class="text-sm font-semibold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                ลงทะเบียนรับโคม: <strong class="text-amber-300">18.00 น.</strong>
+              </div>
+              <div class="text-sm font-semibold text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                ปล่อยโคมลอยพร้อมกัน: <strong class="text-amber-300">20.00 น.</strong>
+              </div>
+              <div class="text-xs text-slate-400 pt-0.5">
+                📞 ติดต่อสอบถาม: <a href="tel:0816696653" class="text-amber-300 underline font-semibold">081-669-6653 (คุณฝ้าย)</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- สิ่งที่ได้รับครบเซ็ต 6 รายการ -->
+          <div class="bg-slate-950/70 border border-amber-500/25 rounded-2xl p-4">
+            <div class="text-xs font-bold text-amber-300 mb-2.5 uppercase tracking-wider">
+              🎁 สิ่งที่ได้รับในชุดโคมลอย (ครบเซ็ต 6 รายการ พร้อมปล่อยโคมทันที)
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs md:text-sm font-semibold text-slate-100">
+              <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-lg">🏮</span> 1. โคมลอยไซส์ XL
+              </div>
+              <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-lg">🔥</span> 2. ไฟแช็ค
+              </div>
+              <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-lg">🕯️</span> 3. เทียน
+              </div>
+              <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-lg">🖊️</span> 4. ปากกาเขียนคำอธิษฐาน
+              </div>
+              <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-lg">🥤</span> 5. เครื่องดื่ม
+              </div>
+              <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800">
+                <span class="text-lg">🎀</span> 6. ของที่ระลึก
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ภาพโปสเตอร์งานโคมลอย -->
+        <div class="lg:col-span-5">
+          <div class="rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-2xl">
+            <img src="./387004.jpg" alt="พรีออเดอร์ปล่อยโคมลอย เทศกาลท่องเที่ยวเมืองพร้าว 24-25 พฤศจิกายน 2569"
+              class="w-full h-auto object-cover" />
+          </div>
+        </div>
+      </div>
+
+      <!-- แบบฟอร์มสั่งจองโคมลอย (3 ขั้นตอนง่ายๆ ในหน้าเดียว) -->
+      <div id="lanternBookingFormCard" class="bg-slate-900/95 border border-amber-500/35 rounded-3xl p-5 md:p-8 shadow-2xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4 mb-6">
+          <div>
+            <h2 class="text-xl md:text-2xl font-extrabold text-amber-400">
+              📝 แบบฟอร์มสั่งจองโคมลอยออนไลน์ (299 บาท / โคม / 2 ท่าน)
+            </h2>
+            <p class="text-xs md:text-sm text-slate-400 mt-0.5">
+              กรอกข้อมูลด้านล่าง สแกน QR พร้อมเพย์ และแนบสลิปเพื่อรับบัตร E-Ticket ได้ทันที
+            </p>
+          </div>
+          <span id="cloudStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> เชื่อมต่อฐานข้อมูลออนไลน์พร้อมใช้งาน
+          </span>
+        </div>
+
+        <form id="lanternBookingForm" onsubmit="submitCustomerBooking(event, 'lantern')" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <!-- คอลัมน์ซ้าย: ขั้นตอนที่ 1 และ 2 (เลือกวัน จำนวน และข้อมูลผู้จอง) -->
+          <div class="lg:col-span-7 space-y-6">
+            <!-- ขั้นที่ 1: เลือกวันที่ -->
+            <div class="space-y-2.5">
+              <label class="block text-sm font-bold text-amber-300">
+                ขั้นตอนที่ 1: เลือกวันที่ต้องการเข้าร่วมปล่อยโคมลอย <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button type="button" id="lanternDateBtn-2026-11-24" onclick="selectLanternDate('2026-11-24')"
+                  class="text-left p-4 rounded-2xl border-2 border-amber-400 bg-amber-500/15 transition relative">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-300">คืนที่ 1</span>
+                    <span id="quotaBadge-2026-11-24" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      ว่างพร้อมจอง
+                    </span>
+                  </div>
+                  <div class="text-base md:text-lg font-extrabold text-white mt-1">
+                    อังคารที่ 24 พ.ย. 2569
+                  </div>
+                  <div class="text-xs text-slate-300 mt-0.5">
+                    ลงทะเบียน 18.00 น. • ปล่อยโคม 20.00 น.
+                  </div>
+                </button>
+
+                <button type="button" id="lanternDateBtn-2026-11-25" onclick="selectLanternDate('2026-11-25')"
+                  class="text-left p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/60 hover:border-slate-600 transition relative">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">คืนที่ 2</span>
+                    <span id="quotaBadge-2026-11-25" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      ว่างพร้อมจอง
+                    </span>
+                  </div>
+                  <div class="text-base md:text-lg font-extrabold text-white mt-1">
+                    พุธที่ 25 พ.ย. 2569
+                  </div>
+                  <div class="text-xs text-slate-300 mt-0.5">
+                    ลงทะเบียน 18.00 น. • ปล่อยโคม 20.00 น.
+                  </div>
+                </button>
+              </div>
+              <input type="hidden" id="lanternSelectedDate" value="2026-11-24" />
+            </div>
+
+            <!-- เลือกจำนวนโคม -->
+            <div class="bg-slate-800/75 border border-slate-700 rounded-2xl p-4 md:p-5 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <label class="block text-sm font-bold text-amber-300">
+                    ระบุจำนวนโคมลอยที่ต้องการจอง <span class="text-red-400">*</span>
+                  </label>
+                  <p class="text-xs text-slate-400">ราคาโคมละ 299 บาท (1 โคม สำหรับผู้เข้าร่วม 2 ท่าน)</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <button type="button" onclick="adjustLanternQty(-1)"
+                    class="w-11 h-11 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-extrabold text-xl flex items-center justify-center transition">
+                    −
+                  </button>
+                  <input id="lanternQtyInput" type="number" min="1" max="50" value="1" oninput="onLanternQtyInput()"
+                    class="w-20 text-center py-2 rounded-xl bg-slate-900 border border-amber-500/50 text-amber-300 font-extrabold text-xl" />
+                  <button type="button" onclick="adjustLanternQty(1)"
+                    class="w-11 h-11 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xl flex items-center justify-center transition">
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <!-- สรุปการคำนวณอัตโนมัติ -->
+              <div class="pt-3 border-t border-slate-700/80 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <div class="text-slate-300 font-medium">
+                  จำนวนสิทธิ์เข้างาน: <strong id="lanternCalcAttendees" class="text-white font-extrabold">1 โคม (สำหรับ 2 ท่าน)</strong>
+                </div>
+                <div class="text-base md:text-lg font-extrabold text-amber-400">
+                  ยอดชำระรวม: <span id="lanternCalcTotal" class="text-2xl">299</span> บาท
+                </div>
+              </div>
+            </div>
+
+            <!-- ขั้นที่ 2: กรอกข้อมูลผู้จอง -->
+            <div class="space-y-4">
+              <div class="text-sm font-bold text-amber-300">
+                ขั้นตอนที่ 2: กรอกชื่อและเบอร์โทรศัพท์ผู้จอง (ใช้ค้นหาบัตร E-Ticket ได้ตลอดเวลา)
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">
+                    ชื่อ - นามสกุล (หรือชื่อเล่น) <span class="text-red-400">*</span>
+                  </label>
+                  <input id="lanternCustomerName" type="text" required placeholder="เช่น คุณสมชาย ใจดี"
+                    class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">
+                    เบอร์โทรศัพท์ติดต่อ <span class="text-red-400">*</span>
+                  </label>
+                  <input id="lanternCustomerPhone" type="tel" required placeholder="เช่น 0812345678"
+                    class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">
+                  หมายเหตุเพิ่มเติม (ถ้ามี)
+                </label>
+                <input id="lanternCustomerNote" type="text" placeholder="เช่น มาเป็นครอบครัว, ต้องการรับโคมพร้อมกัน"
+                  class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400" />
+              </div>
+            </div>
+          </div>
+
+          <!-- คอลัมน์ขวา: ขั้นตอนที่ 3 (สแกน QR ชำระเงิน & แนบสลิป) -->
+          <div class="lg:col-span-5 bg-slate-950/90 border border-amber-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-5">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-amber-300">ขั้นตอนที่ 3: ชำระเงินและแนบสลิป</span>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  PromptPay พร้อมเพย์
+                </span>
+              </div>
+
+              <!-- กล่อง QR Code ชำระเงิน -->
+              <div class="bg-white rounded-2xl p-3 text-slate-900 text-center shadow-lg">
+                <img src="./QR Code.jpg" alt="QR Code ชำระเงิน น.ส.กนกพิชญ์ ชัยชมภู"
+                  class="w-56 md:w-64 mx-auto rounded-lg object-contain" />
+                <div class="mt-2 pt-2 border-t border-slate-200">
+                  <div class="text-xs text-slate-500 font-semibold">ธนาคารกรุงไทย (Thai QR Payment / PromptPay)</div>
+                  <div class="text-sm md:text-base font-extrabold text-slate-900">
+                    ชื่อบัญชี: น.ส.กนกพิชญ์ ชัยชมภู
+                  </div>
+                </div>
+              </div>
+
+              <!-- ปุ่มช่วยดาวน์โหลด QR และคัดลอกยอดเงิน -->
+              <div class="grid grid-cols-2 gap-2.5 text-xs">
+                <a href="./QR Code.jpg" download="QR-Code-Phrao-Festival.jpg"
+                  class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-center border border-slate-700 transition">
+                  📥 บันทึกรูป QR Code
+                </a>
+                <button type="button" onclick="copyCurrentAmount('lantern')"
+                  class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-center border border-slate-700 transition">
+                  📋 คัดลอกยอด <span id="lanternCopyBtnAmount">299</span>฿
+                </button>
+              </div>
+
+              <!-- อัปโหลดรูปสลิปโอนเงิน -->
+              <div class="space-y-2">
+                <label class="block text-xs font-bold text-amber-300">
+                  แนบรูปภาพสลิปโอนเงิน <span class="text-red-400">*</span>
+                </label>
+                <input id="lanternSlipInput" type="file" accept="image/*" required onchange="previewBookingSlip(event, 'lantern')"
+                  class="block w-full text-xs text-slate-300 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer bg-slate-900 border border-slate-700 rounded-xl p-1.5" />
+
+                <div id="lanternSlipPreviewWrap" class="hidden mt-2 relative bg-slate-900 border border-emerald-500/40 rounded-xl p-2 text-center">
+                  <img id="lanternSlipPreviewImg" src="" alt="ตัวอย่างสลิปโอนเงิน" class="max-h-40 mx-auto rounded-lg object-contain" />
+                  <div class="text-[11px] text-emerald-400 font-semibold mt-1">✅ แนบรูปสลิปเรียบร้อยแล้ว</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div id="lanternFormError" class="hidden text-xs font-bold p-3 rounded-xl bg-red-950/90 border border-red-500 text-red-200 text-center"></div>
+
+              <button id="lanternSubmitBtn" type="submit"
+                class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-base md:text-lg shadow-xl shadow-amber-500/25 transition">
+                🏮 ยืนยันการจองโคมลอย & รับบัตร E-Ticket ทันที
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท (20-21 พฤศจิกายน 2569) -->
+    <!-- =================================================================== -->
+    <section id="tabSection-balloon" class="hidden space-y-8">
+      <div class="bg-slate-900/90 border border-emerald-500/35 rounded-3xl p-5 md:p-7 shadow-2xl space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
+              🎈 PHRAO TOURISM FESTIVAL 2026 • เวลา 18.00 – 20.00 น.
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-white">
+              จำหน่ายบัตรชมมินิบอลลูน <span class="text-amber-400">คนละ 100 บาท</span> เทศกาลท่องเที่ยวเมืองพร้าว
+            </h2>
+            <p class="text-sm text-slate-300">
+              วันที่ <strong>20 – 21 พฤศจิกายน 2569</strong> เวลา <strong>18.00 – 20.00 น.</strong> ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
+            </p>
+          </div>
+
+          <a href="./tickets.html"
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm shadow-lg transition">
+            🎟️ เปิดสตูดิโอพิมพ์ตั๋วรถ (สำหรับขายหน้างาน A4)
+          </a>
+        </div>
+
+        <!-- แกลเลอรีโปสเตอร์งาน 20 และ 21 พ.ย. + ภาพมินิบอลลูน -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
+            <img src="./384856_0.jpg" alt="วันศุกร์ที่ 20 พฤศจิกายน 2569 ชมมินิบอลลูน" class="w-full h-72 object-cover" />
+            <div class="p-3 text-xs">
+              <div class="font-bold text-emerald-400">วันศุกร์ที่ 20 พฤศจิกายน 2569</div>
+              <div class="text-slate-300 mt-0.5">ชมมินิบอลลูน & ดนตรี วงทุลักทุเล • สินค้าชุมชน • ล่องเรือชมต้นฉำฉา • เดินป่าโมอาย</div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
+            <img src="./384855_0.jpg" alt="วันเสาร์ที่ 21 พฤศจิกายน 2569 พิธีเปิด & Chef's Table" class="w-full h-72 object-cover" />
+            <div class="p-3 text-xs">
+              <div class="font-bold text-amber-400">วันเสาร์ที่ 21 พฤศจิกายน 2569</div>
+              <div class="text-slate-300 mt-0.5">พิธีเปิด & Chef's Table อาหารล้านนา • การแสดง รร.แม่ปั๋ง • กลองสะบัดชัย • ฟ้อนรำ</div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
+            <img src="./บอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง.png" alt="มินิบอลลูนตาหมากรุก" class="w-full h-72 object-cover" />
+            <div class="p-3 text-xs">
+              <div class="font-bold text-amber-300">จุดชมมินิบอลลูนยามอาทิตย์อัสดง</div>
+              <div class="text-slate-300 mt-0.5">เวลา 18.00 – 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว</div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
+            <img src="./บอลลูนวัวยักษ์เหนือนาทุ่ง.png" alt="บอลลูนวัวยักษ์ งัวเงีย" class="w-full h-72 object-cover" />
+            <div class="p-3 text-xs">
+              <div class="font-bold text-emerald-300">บอลลูนแฟนซีสุดน่ารัก</div>
+              <div class="text-slate-300 mt-0.5">บัตรเข้าชมคนละ 100 บาท (มีทั้งตั๋วรถหน้างานและจองออนไลน์)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ฟอร์มซื้อบัตรชมมินิบอลลูนออนไลน์ -->
+      <div class="bg-slate-900/95 border border-emerald-500/35 rounded-3xl p-5 md:p-8 shadow-2xl">
+        <div class="border-b border-slate-800 pb-4 mb-6">
+          <h3 class="text-xl md:text-2xl font-extrabold text-emerald-400">
+            🎈 ซื้อบัตรชมมินิบอลลูนล่วงหน้าออนไลน์ (คนละ 100 บาท)
+          </h3>
+          <p class="text-xs md:text-sm text-slate-400 mt-0.5">
+            วันที่ 20–21 พฤศจิกายน 2569 เวลา 18.00 – 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
+          </p>
+        </div>
+
+        <form id="balloonBookingForm" onsubmit="submitCustomerBooking(event, 'balloon')" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div class="lg:col-span-7 space-y-5">
+            <div>
+              <label class="block text-sm font-bold text-emerald-300 mb-2">
+                เลือกวันที่เข้าชมมินิบอลลูน (เวลา 18.00 - 20.00 น.) <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button type="button" id="balloonDateBtn-2026-11-20" onclick="selectBalloonDate('2026-11-20')"
+                  class="text-left p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-500/15 transition">
+                  <div class="text-xs font-bold text-emerald-300">วันแรก</div>
+                  <div class="text-base font-extrabold text-white mt-0.5">วันศุกร์ที่ 20 พ.ย. 2569</div>
+                  <div class="text-xs text-slate-300 mt-0.5">ชมมินิบอลลูน & ดนตรี วงทุลักทุเล</div>
+                </button>
+                <button type="button" id="balloonDateBtn-2026-11-21" onclick="selectBalloonDate('2026-11-21')"
+                  class="text-left p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/60 transition">
+                  <div class="text-xs font-bold text-slate-400">วันที่สอง</div>
+                  <div class="text-base font-extrabold text-white mt-0.5">วันเสาร์ที่ 21 พ.ย. 2569</div>
+                  <div class="text-xs text-slate-300 mt-0.5">พิธีเปิด & Chef's Table อาหารล้านนา</div>
+                </button>
+              </div>
+              <input type="hidden" id="balloonSelectedDate" value="2026-11-20" />
+            </div>
+
+            <!-- จำนวนบัตรมินิบอลลูน -->
+            <div class="bg-slate-800/75 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div class="text-sm font-bold text-emerald-300">จำนวนผู้เข้าชม (คนละ 100 บาท)</div>
+                <div class="text-xs text-slate-400">1 ใบ สำหรับ 1 ท่าน (เวลา 18.00 – 20.00 น.)</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <button type="button" onclick="adjustBalloonQty(-1)"
+                  class="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-extrabold text-xl">−</button>
+                <input id="balloonQtyInput" type="number" min="1" max="100" value="2" oninput="onBalloonQtyInput()"
+                  class="w-20 text-center py-2 rounded-xl bg-slate-900 border border-emerald-500/50 text-emerald-300 font-extrabold text-xl" />
+                <button type="button" onclick="adjustBalloonQty(1)"
+                  class="w-10 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xl">+</button>
+              </div>
+              <div class="w-full pt-2 border-t border-slate-700 flex items-center justify-between text-sm">
+                <span>จำนวนบัตร: <strong id="balloonCalcAttendees" class="text-white">2 ท่าน</strong></span>
+                <span class="text-lg font-extrabold text-emerald-400">รวม <span id="balloonCalcTotal">200</span> บาท</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">ชื่อผู้จอง <span class="text-red-400">*</span></label>
+                <input id="balloonCustomerName" type="text" required placeholder="ชื่อ - นามสกุล"
+                  class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">เบอร์โทรศัพท์ <span class="text-red-400">*</span></label>
+                <input id="balloonCustomerPhone" type="tel" required placeholder="0812345678"
+                  class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">หมายเหตุ (ถ้ามี)</label>
+              <input id="balloonCustomerNote" type="text" placeholder="หมายเหตุเพิ่มเติม"
+                class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm" />
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 bg-slate-950/90 border border-emerald-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="text-sm font-bold text-emerald-300">สแกน QR พร้อมเพย์และแนบสลิป</div>
+              <div class="bg-white rounded-2xl p-3 text-slate-900 text-center">
+                <img src="./QR Code.jpg" alt="QR Code น.ส.กนกพิชญ์ ชัยชมภู" class="w-52 mx-auto rounded-lg object-contain" />
+                <div class="text-xs font-bold text-slate-900 mt-1">ชื่อบัญชี: น.ส.กนกพิชญ์ ชัยชมภู</div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-emerald-300 mb-1">แนบรูปสลิปโอนเงิน <span class="text-red-400">*</span></label>
+                <input id="balloonSlipInput" type="file" accept="image/*" required onchange="previewBookingSlip(event, 'balloon')"
+                  class="block w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 cursor-pointer bg-slate-900 border border-slate-700 rounded-xl p-1.5" />
+                <div id="balloonSlipPreviewWrap" class="hidden mt-2 bg-slate-900 border border-emerald-500/40 rounded-xl p-2 text-center">
+                  <img id="balloonSlipPreviewImg" src="" alt="สลิปโอนเงิน" class="max-h-36 mx-auto rounded-lg object-contain" />
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <div id="balloonFormError" class="hidden text-xs font-bold p-2.5 rounded-xl bg-red-950 border border-red-500 text-red-200 text-center"></div>
+              <button id="balloonSubmitBtn" type="submit"
+                class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-base shadow-xl transition">
+                🎈 ยืนยันซื้อบัตรมินิบอลลูน & รับ E-Ticket
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: ค้นหาบัตร E-Ticket ของฉันด้วยเบอร์โทรศัพท์หรือรหัสจอง -->
+    <!-- =================================================================== -->
+    <section id="tabSection-lookup" class="hidden space-y-6">
+      <div class="bg-slate-900/95 border border-amber-500/35 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto shadow-2xl space-y-5">
+        <div class="text-center space-y-1">
+          <h2 class="text-2xl font-extrabold text-amber-400">🎫 ค้นหาและดาวน์โหลดบัตร E-Ticket ของฉัน</h2>
+          <p class="text-xs md:text-sm text-slate-300">
+            กรอกเบอร์โทรศัพท์ที่ใช้จอง หรือ รหัสการจอง (เช่น <code class="text-amber-300">KL24-0001</code>) เพื่อดูสถานะและบันทึกบัตรลงมือถือ
+          </p>
+        </div>
+
+        <form onsubmit="handleCustomerTicketLookup(event)" class="flex flex-col sm:flex-row gap-3">
+          <input id="lookupSearchInput" type="text" required placeholder="กรอกเบอร์โทรศัพท์ 10 หลัก หรือ รหัสจอง..."
+            class="flex-grow px-4 py-3.5 rounded-2xl bg-slate-800 border border-slate-700 text-white font-semibold focus:outline-none focus:border-amber-400" />
+          <button type="submit"
+            class="px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm shadow-lg transition">
+            🔍 ค้นหาบัตรทันที
+          </button>
+        </form>
+
+        <div id="lookupResultsContainer" class="space-y-4 pt-2"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: ระบบหลังบ้านแอดมิน (Admin Backoffice ครบทั้ง 8 โมดูล) -->
+    <!-- =================================================================== -->
+    <section id="tabSection-admin" class="hidden space-y-6">
+      <!-- แถบหัวข้อระบบหลังบ้านแอดมิน -->
+      <div class="bg-slate-900 border border-amber-500/40 rounded-3xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div>
+          <div class="inline-flex items-center gap-2 text-xs font-bold text-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            ระบบบริหารจัดการและรายงานผล (Admin Backoffice • 8 โมดูลครบวงจร)
+          </div>
+          <h2 class="text-xl md:text-2xl font-extrabold text-white mt-0.5">
+            📊 ศูนย์ควบคุมเทศกาลท่องเที่ยวเมืองพร้าว 2569 (ณ โฮงชาฮักมี)
+          </h2>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="refreshAdminPortal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold border border-slate-700">
+            🔄 รีเฟรชข้อมูลล่าสุด
+          </button>
+          <button onclick="openWalkinPosModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-md">
+            ➕ บันทึกขายหน้างาน (POS / ตั๋วรถ)
+          </button>
+          <a href="./tickets.html" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold shadow-md">
+            🎟️ พิมพ์ตั๋วรถมินิบอลลูน 100฿
+          </a>
+          <button onclick="openAdminSettingsModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700">
+            ⚙️ ตั้งค่าโควตา / รหัสผ่าน
+          </button>
+          <button onclick="adminLogout()" class="px-3.5 py-2 rounded-xl bg-red-950/80 hover:bg-red-900 text-red-200 text-xs font-bold border border-red-700/50">
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+
+      <!-- โมดูลที่ 2.1: KPI Cards สรุปรายได้และจำนวนผู้เข้าร่วม 6 การ์ดหลัก -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="adminKpiGrid"></div>
+
+      <!-- โมดูลที่ 2.2 & โมดูลที่ 4: คำนวณของที่ต้องเตรียมหน้างาน + เช็คอินด่วน 18.00 น. -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- ตารางคำนวณสิ่งของที่สตาฟต้องจัดเตรียมหน้างานอัตโนมัติ (Inventory Calculator) -->
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm md:text-base font-extrabold text-amber-400">
+              🎁 ตารางคำนวณสิ่งของที่สตาฟต้องจัดเตรียมหน้างาน (วันที่ 24–25 พ.ย. 2569)
+            </h3>
+            <span class="text-[11px] text-slate-400">คำนวณอัตโนมัติจากยอดจองโคมลอย</span>
+          </div>
+          <div id="adminInventoryTableWrap" class="overflow-x-auto"></div>
+        </div>
+
+        <!-- โมดูลที่ 4: ระบบเช็คอินรับโคมหน้างาน เวลา 18.00 น. (ป้องกันการรับโคมซ้ำ) -->
+        <div class="lg:col-span-5 bg-slate-900 border border-amber-500/35 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm md:text-base font-extrabold text-emerald-400">
+              📲 จุดลงทะเบียนเช็คอินหน้างาน 18.00 น. (Anti-Duplicate)
+            </h3>
+            <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30 font-bold">
+              ป้องกันรับโคมซ้ำ 100%
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            พิมพ์รหัสจอง (เช่น <code class="text-amber-300">KL24-0001</code>) หรือเบอร์โทร 4 ตัวท้ายของลูกค้าเพื่อตรวจสอบและกดยืนยันส่งมอบโคมลอย
+          </p>
+          <div class="flex gap-2">
+            <input id="quickCheckinInput" type="text" placeholder="รหัสจอง หรือ เบอร์โทรลูกค้า..."
+              onkeydown="if(event.key==='Enter'){event.preventDefault();performQuickCheckinSearch();}"
+              class="flex-grow px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-semibold focus:outline-none focus:border-emerald-400" />
+            <button onclick="performQuickCheckinSearch()"
+              class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+              ค้นหาเช็คอิน
+            </button>
+          </div>
+          <div id="quickCheckinResultBox" class="space-y-2 pt-1"></div>
+        </div>
+      </div>
+
+      <!-- โมดูลที่ 3 & โมดูลที่ 7: ตารางจัดการรายการจอง ตรวจสลิป และปุ่ม Export / พิมพ์ใบลงทะเบียน -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="adminFilterCategoryDate" onchange="renderAdminBookingsTable()"
+              class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white">
+              <option value="all">📅 กิจกรรมและวันที่ทั้งหมด</option>
+              <option value="lantern_2026-11-24">🏮 โคมลอย อังคาร 24 พ.ย. 2569</option>
+              <option value="lantern_2026-11-25">🏮 โคมลอย พุธ 25 พ.ย. 2569</option>
+              <option value="balloon_2026-11-20">🎈 มินิบอลลูน ศุกร์ 20 พ.ย. 2569</option>
+              <option value="balloon_2026-11-21">🎈 มินิบอลลูน เสาร์ 21 พ.ย. 2569</option>
+            </select>
+
+            <select id="adminFilterStatus" onchange="renderAdminBookingsTable()"
+              class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white">
+              <option value="all">📋 สถานะสลิปทั้งหมด</option>
+              <option value="pending">⏳ รอตรวจสอบสลิป</option>
+              <option value="approved">✅ อนุมัติสลิปแล้ว</option>
+              <option value="checkedin">🏮 เช็คอินรับของแล้ว</option>
+              <option value="not_checkedin">🕒 ยังไม่เช็คอินหน้างาน</option>
+              <option value="rejected">❌ ยกเลิก/ปฏิเสธ</option>
+            </select>
+
+            <input id="adminSearchInput" type="text" oninput="renderAdminBookingsTable()"
+              placeholder="ค้นหาชื่อ, เบอร์โทร, รหัสจอง..."
+              class="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white w-56" />
+          </div>
+
+          <!-- ปุ่ม Export Excel & พิมพ์ใบรายชื่อหน้างาน -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="exportBookingsToCsv()"
+              class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold shadow">
+              📥 Export Excel (CSV ภาษาไทย)
+            </button>
+            <button onclick="printRegistrationCheckinSheet()"
+              class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold">
+              🖨️ พิมพ์ใบเซ็นชื่อรับโคมหน้างาน (A4)
+            </button>
+            <button onclick="printExecutiveSummarySheet()"
+              class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold">
+              🖨️ พิมพ์ใบสรุปรายงานผู้บริหาร (A4)
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                <th class="py-3 px-2.5">รหัสจอง</th>
+                <th class="py-3 px-2.5">กิจกรรม / วันที่</th>
+                <th class="py-3 px-2.5">ชื่อลูกค้า / เบอร์โทร</th>
+                <th class="py-3 px-2.5">จำนวน</th>
+                <th class="py-3 px-2.5">ยอดเงิน</th>
+                <th class="py-3 px-2.5">สลิปโอนเงิน</th>
+                <th class="py-3 px-2.5">สถานะสลิป</th>
+                <th class="py-3 px-2.5">เช็คอิน 18.00 น.</th>
+                <th class="py-3 px-2.5 text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="adminBookingsTableBody" class="divide-y divide-slate-800/80"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- พื้นที่สำหรับสั่งพิมพ์รายงาน A4 (ใบรายชื่อลงทะเบียนหน้างาน / รายงานสรุปผู้บริหาร) -->
+  <div id="printableAdminReportArea"></div>
+
+  <!-- =================================================================== -->
+  <!-- MODALS (E-Ticket, Admin Login, Slip Inspector, Edit, Walk-in POS, Settings) -->
+  <!-- =================================================================== -->
+
+  <!-- 1. Modal แสดงบัตร E-Ticket ทันทีหลังจองเสร็จ -->
+  <div id="eTicketModal" class="no-print fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border-2 border-amber-400 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold text-amber-400 uppercase">PHRAO TOURISM FESTIVAL 2026</span>
+          <h3 class="text-lg font-extrabold text-white">🎫 บัตรเข้างานดิจิทัล (E-Ticket)</h3>
+        </div>
+        <button onclick="closeETicketModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+
+      <div id="eTicketModalBody" class="bg-amber-50 text-slate-900 rounded-2xl p-5 border-2 border-amber-500 space-y-3"></div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+        <button id="eTicketDownloadBtn" type="button"
+          class="py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg">
+          📥 บันทึกรูปบัตร E-Ticket (.PNG)
+        </button>
+        <button type="button" onclick="closeETicketModal()"
+          class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700">
+          ปิดหน้าต่างนี้
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Modal เข้าสู่ระบบสำหรับแอดมิน (Admin Login Modal) -->
+  <div id="adminLoginModal" class="no-print fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-amber-400">🔒 เข้าสู่ระบบผู้ดูแล (Admin Only)</h3>
+        <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      <p class="text-xs text-slate-400">
+        เฉพาะเจ้าหน้าที่เทศกาลท่องเที่ยวเมืองพร้าว (ลูกค้าทั่วไปไม่ต้องล็อกอิน)
+      </p>
+      <form onsubmit="submitAdminLogin(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">ชื่อผู้ใช้ (Username)</label>
+          <input id="adminUsernameInput" type="text" value="admin" required
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">รหัสผ่าน (Password)</label>
+          <input id="adminPasswordInput" type="password" placeholder="รหัสเริ่มต้น: phrao2569" required
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm" />
+        </div>
+        <div id="adminLoginError" class="hidden text-xs font-bold text-red-400 text-center"></div>
+        <button type="submit"
+          class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm shadow-lg">
+          เข้าสู่ระบบหลังบ้าน Admin
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Modal ตรวจสอบรูปสลิปโอนเงิน (Slip Verification Modal) -->
+  <div id="slipInspectorModal" class="no-print fixed inset-0 bg-black/85 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-extrabold text-amber-400">🧾 ตรวจสอบสลิปโอนเงิน & อนุมัติรายการ</h3>
+        <button onclick="closeSlipInspectorModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      <div id="slipInspectorContent" class="space-y-3 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- 4. Modal แก้ไขข้อมูลการจองของลูกค้า (Edit Booking Modal) -->
+  <div id="editBookingModal" class="no-print fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-extrabold text-amber-400">✏️ แก้ไขข้อมูลใบจอง</h3>
+        <button onclick="closeEditBookingModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      <form id="editBookingForm" onsubmit="submitEditBookingForm(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="editBookingId" />
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">ชื่อลูกค้า</label>
+          <input id="editCustomerName" type="text" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">เบอร์โทรศัพท์</label>
+          <input id="editCustomerPhone" type="text" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">วันที่เข้าร่วม</label>
+            <select id="editEventDate" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white">
+              <option value="2026-11-24">โคมลอย 24 พ.ย. 69</option>
+              <option value="2026-11-25">โคมลอย 25 พ.ย. 69</option>
+              <option value="2026-11-20">มินิบอลลูน 20 พ.ย. 69</option>
+              <option value="2026-11-21">มินิบอลลูน 21 พ.ย. 69</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">จำนวน (โคม/ใบ)</label>
+            <input id="editQuantity" type="number" min="1" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">หมายเหตุ</label>
+          <input id="editNote" type="text" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeEditBookingModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold">บันทึกการแก้ไข</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Modal บันทึกยอดขายหน้างาน (Walk-in & ขายตั๋วรถมินิบอลลูน POS) -->
+  <div id="walkinPosModal" class="no-print fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-extrabold text-emerald-400">💵 บันทึกยอดขายหน้างาน (Walk-in / ตั๋วรถ)</h3>
+        <button onclick="closeWalkinPosModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      <form onsubmit="submitWalkinPosForm(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">ประเภทรายการขายหน้างาน</label>
+          <select id="walkinCategoryDate" onchange="updateWalkinPosCalc()" class="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold">
+            <option value="balloon|2026-11-20">🎈 ขายตั๋วรถมินิบอลลูน ศุกร์ 20 พ.ย. 69 (ใบละ 100฿)</option>
+            <option value="balloon|2026-11-21">🎈 ขายตั๋วรถมินิบอลลูน เสาร์ 21 พ.ย. 69 (ใบละ 100฿)</option>
+            <option value="lantern|2026-11-24">🏮 ขายโคมลอยหน้างาน อังคาร 24 พ.ย. 69 (โคมละ 299฿)</option>
+            <option value="lantern|2026-11-25">🏮 ขายโคมลอยหน้างาน พุธ 25 พ.ย. 69 (โคมละ 299฿)</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">จำนวน (ใบ / โคม)</label>
+            <input id="walkinQty" type="number" min="1" value="10" oninput="updateWalkinPosCalc()" required
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">วิธีรับเงิน</label>
+            <select id="walkinPayMethod" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white">
+              <option value="cash">เงินสดหน้างาน</option>
+              <option value="promptpay_qr">สแกน QR หน้างาน</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">ชื่อลูกค้า หรือ ช่วงเลขตั๋วรถที่ขาย (เช่น NO.0001-0010)</label>
+          <input id="walkinTitle" type="text" placeholder="เช่น ขายตั๋วรถหน้างาน NO.0001-0010" required
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+        </div>
+        <div class="p-3 rounded-xl bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-between">
+          <span class="text-emerald-200">ยอดเงินที่บันทึกเข้ารายงาน:</span>
+          <span id="walkinCalcTotal" class="text-base font-extrabold text-emerald-400">1,000 บาท</span>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeWalkinPosModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold">✅ บันทึกยอดขายทันที</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. Modal ตั้งค่าโควตา เปิด-ปิดรับจอง และสำรองข้อมูล (Admin Settings Modal) -->
+  <div id="adminSettingsModal" class="no-print fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-auto text-xs">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-extrabold text-amber-400">⚙️ ตั้งค่าโควตาโคมลอย & ระบบหลังบ้าน</h3>
+        <button onclick="closeAdminSettingsModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+      </div>
+
+      <form onsubmit="submitAdminSettings(event)" class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">โควตาโคมลอย 24 พ.ย. 69 (โคม)</label>
+            <input id="settingQuota24" type="number" min="1" value="200" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">โควตาโคมลอย 25 พ.ย. 69 (โคม)</label>
+            <input id="settingQuota25" type="number" min="1" value="200" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-800 border border-slate-700 cursor-pointer">
+            <input id="settingOpen24" type="checkbox" checked class="w-4 h-4 accent-amber-500" />
+            <span class="font-bold text-white">เปิดรับจองโคม 24 พ.ย. 69</span>
+          </label>
+          <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-800 border border-slate-700 cursor-pointer">
+            <input id="settingOpen25" type="checkbox" checked class="w-4 h-4 accent-amber-500" />
+            <span class="font-bold text-white">เปิดรับจองโคม 25 พ.ย. 69</span>
+          </label>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3">
+          <label class="block text-slate-300 font-semibold mb-1">เปลี่ยนรหัสผ่าน Admin ใหม่ (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)</label>
+          <input id="settingNewAdminPass" type="password" placeholder="รหัสผ่านใหม่..."
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 flex flex-wrap items-center justify-between gap-2">
+          <button type="button" onclick="downloadJsonBackup()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold">
+            💾 สำรองข้อมูลทั้งหมด (Backup JSON)
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeAdminSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">ปิด</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold">บันทึกการตั้งค่า</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ส่วนท้ายเว็บไซต์ (Footer พร้อมเครดิตผู้พัฒนาตามกฎ AGENTS.md) -->
+  <footer class="no-print bg-slate-950/90 border-t border-slate-800/80 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <div>
+        <span class="font-bold text-amber-300">เทศกาลท่องเที่ยวเมืองพร้าว 2569 (Phrao Tourism Festival 2026)</span>
+        • ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ • โทร. 081-669-6653 (คุณฝ้าย)
+      </div>
+      <div class="font-semibold text-slate-300">
+        ผู้พัฒนา: <span class="text-amber-400 font-extrabold">S.Y. Interactive Development Limited</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/db.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

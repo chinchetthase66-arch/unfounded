@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบพิมพ์ตั๋วชมมินิบอลลูน 100 บาท (แบบตั๋วรถขายหน้างาน) — เทศกาลท่องเที่ยวเมืองพร้าว 2569</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Prompt', 'Sarabun', sans-serif;
+      background-color: #0F172A;
+      color: #F8FAFC;
+    }
+
+    /* จำลองหน้ากระดาษ A4 บนหน้าจอ */
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 6mm;
+      margin: 0 auto 24px auto;
+      background: #FFFFFF;
+      color: #0F172A;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* โครงสร้างตารางตั๋วใน 1 หน้า A4 */
+    .tickets-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3.5mm;
+    }
+
+    .tickets-grid-1col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4mm;
+    }
+
+    /* ตัวตั๋วรถ 1 ใบ (มีต้นขั้ว + เส้นปะฉีก + หางตั๋วลูกค้า) */
+    .bus-ticket {
+      display: flex;
+      border: 1.8px solid #1E293B;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #FDFBF7;
+      position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      height: 54mm;
+      box-sizing: border-box;
+    }
+
+    .tickets-grid-1col .bus-ticket {
+      height: 53mm;
+    }
+
+    /* ส่วนต้นขั้วสำหรับคนขาย (ซ้าย 30%) */
+    .ticket-stub {
+      width: 30%;
+      background: #F1F5F9;
+      padding: 6px 7px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 2px dashed #475569;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    /* สัญลักษณ์รอยปรุฉีกตั๋ว */
+    .ticket-stub::after {
+      content: "✂";
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      font-size: 12px;
+      color: #334155;
+      background: #FDFBF7;
+      padding: 0 2px;
+      line-height: 1;
+    }
+
+    /* ส่วนบัตรสำหรับลูกค้า (ขวา 70%) */
+    .ticket-main {
+      width: 70%;
+      padding: 6px 9px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 60%, #ECFDF5 100%);
+    }
+
+    /* ลายน้ำรูปบอลลูนด้านขวา */
+    .ticket-bg-art {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 58px;
+      height: 58px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1.5px solid #D97706;
+      opacity: 0.92;
+      z-index: 1;
+    }
+
+    .tickets-grid-1col .ticket-bg-art {
+      width: 86px;
+      height: 86px;
+      right: 10px;
+      bottom: 8px;
+    }
+
+    .ticket-content-layer {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ตั้งค่าสำหรับการสั่งพิมพ์ลงกระดาษ A4 จริง */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    @media print {
+      html, body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .a4-sheet {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        padding: 6mm !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .a4-sheet:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+
+  <!-- แถบควบคุมด้านบน (ซ่อนอัตโนมัติเวลาสั่งพิมพ์) -->
+  <header class="no-print bg-slate-900/95 border-b border-amber-500/30 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="./index.html" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-sm font-semibold border border-slate-700 transition">
+          ← กลับหน้าเว็บหลัก / หน้า Admin
+        </a>
+        <div>
+          <h1 class="text-base md:text-lg font-bold text-amber-400 flex items-center gap-2">
+            🎟️ สตูดิโอพิมพ์ตั๋วชมมินิบอลลูน คนละ 100 บาท (แบบตั๋วรถขายหน้างาน)
+          </h1>
+          <p class="text-xs text-slate-400">
+            เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20–21 พฤศจิกายน 2569 เวลา 18.00 – 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition">
+          🖨️ สั่งพิมพ์ตั๋ว A4 / บันทึกเป็น PDF
+        </button>
+        <button onclick="openRecordSalesModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition">
+          💵 บันทึกยอดขายตั๋วเข้าหน้ารายงาน Admin
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- แผงตั้งค่าการสร้างตั๋ว (ซ่อนเวลาสั่งพิมพ์) -->
+  <section class="no-print max-w-7xl mx-auto px-4 pt-6 pb-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <!-- เลขเริ่มต้น -->
+        <div>
+          <label class="block text-xs font-semibold text-amber-300 mb-1">เลขที่ตั๋วเริ่มต้น (Start No.)</label>
+          <input id="startNumInput" type="number" min="1" max="9999" value="1" onchange="renderTickets()"
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold focus:outline-none focus:border-amber-400" />
+        </div>
+
+        <!-- เลขสิ้นสุด -->
+        <div>
+          <label class="block text-xs font-semibold text-amber-300 mb-1">เลขที่ตั๋วสิ้นสุด (End No.)</label>
+          <input id="endNumInput" type="number" min="1" max="9999" value="10" onchange="renderTickets()"
+            class="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold focus:outline-none focus:border-amber-400" />
+        </div>
+
+        <!-- รูปแบบวันที่บนตั๋ว -->
+        <div>
+          <label class="block text-xs font-semibold text-amber-300 mb-1">รูปแบบวันที่บนตั๋ว</label>
+          <select id="dateModeSelect" onchange="renderTickets()"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-medium focus:outline-none focus:border-amber-400">
+            <option value="both">20-21 พ.ย. 2569 (มีช่องติ๊กเลือกวัน)</option>
+            <option value="20">เฉพาะวันศุกร์ที่ 20 พฤศจิกายน 2569</option>
+            <option value="21">เฉพาะวันเสาร์ที่ 21 พฤศจิกายน 2569</option>
+          </select>
+        </div>
+
+        <!-- ภาพประกอบบนตั๋ว -->
+        <div>
+          <label class="block text-xs font-semibold text-amber-300 mb-1">ภาพมินิบอลลูนบนตั๋ว</label>
+          <select id="artworkModeSelect" onchange="renderTickets()"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-medium focus:outline-none focus:border-amber-400">
+            <option value="alternate">คละลายทั้ง 2 ภาพ (ตาหมากรุก + วัวยักษ์)</option>
+            <option value="checkered">บอลลูนตาหมากรุกยามอาทิตย์อัสดง</option>
+            <option value="cow">บอลลูนวัวยักษ์ (งัวเงีย)</option>
+          </select>
+        </div>
+
+        <!-- การจัดวางต่อหน้า A4 -->
+        <div>
+          <label class="block text-xs font-semibold text-amber-300 mb-1">ขนาดตั๋ว / จำนวนต่อหน้า A4</label>
+          <select id="layoutColumnsSelect" onchange="renderTickets()"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-medium focus:outline-none focus:border-amber-400">
+            <option value="2">10 ใบ / หน้า A4 (2 คอลัมน์ มาตรฐานตั๋วรถ)</option>
+            <option value="1">5 ใบ / หน้า A4 (1 คอลัมน์ ตั๋วยาวพิเศษ)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ปุ่มลัดเลือกจำนวนใบ -->
+      <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-slate-400 font-medium">เลือกจำนวนด่วน:</span>
+          <button onclick="setRangePreset(1, 10)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
+            0001 - 0010 (10 ใบ / 1 หน้า)
+          </button>
+          <button onclick="setRangePreset(1, 20)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
+            0001 - 0020 (20 ใบ / 2 หน้า)
+          </button>
+          <button onclick="setRangePreset(1, 50)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
+            0001 - 0050 (50 ใบ / 5 หน้า)
+          </button>
+          <button onclick="setRangePreset(1, 100)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-semibold">
+            0001 - 0100 (100 ใบ / 10 หน้า)
+          </button>
+        </div>
+        <div id="ticketSummaryBadge" class="text-emerald-400 font-bold text-sm">
+          กำลังแสดงตั๋ว 10 ใบ (รวมมูลค่า 1,000 บาท)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- พื้นที่แสดงกระดาษ A4 สำหรับพิมพ์ตั๋วรถ -->
+  <main id="sheetsContainer" class="px-2 md:px-6 overflow-x-auto"></main>
+
+  <!-- ส่วนท้ายเครดิตผู้พัฒนา (ซ่อนเวลาพิมพ์ตั๋ว) -->
+  <footer class="no-print max-w-7xl mx-auto px-4 mt-8 text-center text-xs text-slate-400 space-y-1">
+    <p class="font-semibold text-amber-300">เทศกาลท่องเที่ยวเมืองพร้าว 2569 • ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ • โทร. 081-669-6653 (คุณฝ้าย)</p>
+    <p>Developed by <span class="text-white font-bold">S.Y. Interactive Development Limited</span></p>
+  </footer>
+
+  <!-- Modal บันทึกยอดขายตั๋วรถเข้าหน้ารายงาน Admin (Supabase) -->
+  <div id="recordSalesModal" class="no-print fixed inset-0 bg-black/75 z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-amber-400">💵 บันทึกยอดขายตั๋วมินิบอลลูนหน้างาน</h3>
+        <button onclick="closeRecordSalesModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <p class="text-xs text-slate-300 mb-4">
+        เมื่อขายตั๋วฉีกหน้างานแล้ว สามารถบันทึกช่วงเลขตั๋วที่ขายได้เพื่อส่งยอดเงินเข้ารายงานของ Admin บนฐานข้อมูล Supabase ทันที
+      </p>
+
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">วันที่ขายบัตรหน้างาน</label>
+          <select id="posDateSelect" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-semibold">
+            <option value="2026-11-20">วันศุกร์ที่ 20 พฤศจิกายน 2569</option>
+            <option value="2026-11-21">วันเสาร์ที่ 21 พฤศจิกายน 2569</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">ตั้งแต่เลขที่ตั๋ว (Start No.)</label>
+            <input id="posStartSerial" type="number" min="1" value="1" oninput="updatePosModalCalc()"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">ถึงเลขที่ตั๋ว (End No.)</label>
+            <input id="posEndSerial" type="number" min="1" value="10" oninput="updatePosModalCalc()"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">ช่องทางรับเงินหน้างาน</label>
+          <select id="posPaymentMethod" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white">
+            <option value="cash">เงินสดหน้างาน (Cash)</option>
+            <option value="promptpay_qr">สแกน QR พร้อมเพย์หน้างาน</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">ชื่อผู้บันทึก / หมายเหตุ</label>
+          <input id="posStaffNote" type="text" placeholder="เช่น ขายตั๋วเล่มที่ 1 หน้าทางเข้า"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white" />
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-between">
+          <span class="text-xs text-emerald-200">จำนวนตั๋วที่ขายได้รวม:</span>
+          <span id="posCalcDisplay" class="text-base font-extrabold text-emerald-400">10 ใบ = 1,000 บาท</span>
+        </div>
+
+        <div id="posFeedbackMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg text-center"></div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button onclick="closeRecordSalesModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">
+            ยกเลิก
+          </button>
+          <button id="posSubmitBtn" onclick="submitManualTicketBatch()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg transition">
+            ✅ ยืนยันบันทึกยอดเข้าหน้ารายงาน Admin
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/db.js"></script>
+  <script>
+    const ARTWORK_CHECKERED = './บอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง.png';
+    const ARTWORK_COW = './บอลลูนวัวยักษ์เหนือนาทุ่ง.png';
+
+    function formatSerial(num) {
+      return String(num).padStart(4, '0');
+    }
+
+    function setRangePreset(start, end) {
+      document.getElementById('startNumInput').value = start;
+      document.getElementById('endNumInput').value = end;
+      renderTickets();
+    }
+
+    function renderSingleTicketHtml(serialNum, dateMode, artworkMode) {
+      const serialStr = formatSerial(serialNum);
+      const useCow = artworkMode === 'cow' || (artworkMode === 'alternate' && serialNum % 2 === 0);
+      const imgSrc = useCow ? ARTWORK_COW : ARTWORK_CHECKERED;
+
+      let stubDateHtml = '';
+      let mainDateHtml = '';
+
+      if (dateMode === '20') {
+        stubDateHtml = `<div class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded px-1.5 py-0.5 text-center">ศุกร์ที่ 20 พ.ย. 2569</div>`;
+        mainDateHtml = `<span class="inline-block bg-emerald-800 text-white font-bold px-2 py-0.5 rounded text-[11px]">วันที่ 20 พฤศจิกายน 2569</span>`;
+      } else if (dateMode === '21') {
+        stubDateHtml = `<div class="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 rounded px-1.5 py-0.5 text-center">เสาร์ที่ 21 พ.ย. 2569</div>`;
+        mainDateHtml = `<span class="inline-block bg-amber-700 text-white font-bold px-2 py-0.5 rounded text-[11px]">วันที่ 21 พฤศจิกายน 2569</span>`;
+      } else {
+        stubDateHtml = `
+          <div class="flex items-center justify-between text-[9.5px] font-semibold text-slate-700 bg-white border border-slate-300 rounded px-1.5 py-0.5">
+            <span>☐ 20 พ.ย. 69</span>
+            <span>☐ 21 พ.ย. 69</span>
+          </div>
+        `;
+        mainDateHtml = `
+          <div class="flex flex-wrap items-center gap-2 text-[10.5px] font-bold text-slate-900">
+            <span>วันที่ 20-21 พฤศจิกายน 2569</span>
+            <span class="bg-white border border-slate-400 px-1.5 py-0.2 rounded text-[9.5px]">☐ ศุกร์ 20 พ.ย.</span>
+            <span class="bg-white border border-slate-400 px-1.5 py-0.2 rounded text-[9.5px]">☐ เสาร์ 21 พ.ย.</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="bus-ticket">
+          <!-- ต้นขั้วสำหรับคนขาย (ซ้าย) -->
+          <div class="ticket-stub">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-300 pb-0.5 mb-1">
+                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-600">ต้นขั้วบัตร</span>
+                <span class="text-[11px] font-extrabold text-red-700 font-mono">NO.${serialStr}</span>
+              </div>
+              <div class="text-[10.5px] font-extrabold text-slate-900 leading-tight">
+                บัตรชมมินิบอลลูน
+              </div>
+              <div class="text-[9.5px] font-semibold text-slate-600 leading-tight mt-0.5">
+                เทศกาลท่องเที่ยวเมืองพร้าว
+              </div>
+              <div class="text-[9px] text-slate-600 leading-tight mt-0.5">
+                20-21 พ.ย. 2569 (18.00-20.00 น.)
+              </div>
+              <div class="text-[9px] text-slate-600 leading-tight">
+                ณ โฮงชาฮักมี อ.พร้าว
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              ${stubDateHtml}
+              <div class="flex items-center justify-between pt-0.5 border-t border-slate-300">
+                <span class="text-[9px] text-slate-500">ผู้ขาย:................</span>
+                <span class="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-400">100 บาท</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ส่วนหางตั๋วสำหรับฉีกให้ลูกค้า (ขวา) -->
+          <div class="ticket-main">
+            <img src="${imgSrc}" alt="มินิบอลลูนเมืองพร้าว" class="ticket-bg-art" />
+
+            <div class="ticket-content-layer">
+              <div class="flex items-center justify-between gap-1 border-b border-amber-700/30 pb-1">
+                <span class="text-[10px] font-extrabold text-emerald-900 uppercase tracking-tight">
+                  🎈 เทศกาลท่องเที่ยวเมืองพร้าว 2569
+                </span>
+                <span class="text-[12px] font-extrabold text-red-700 font-mono bg-white/90 px-1.5 rounded border border-red-300">
+                  NO. ${serialStr}
+                </span>
+              </div>
+
+              <div class="mt-1">
+                <div class="text-[13px] font-extrabold text-slate-950 leading-snug">
+                  จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท
+                </div>
+                <div class="mt-0.5">
+                  ${mainDateHtml}
+                </div>
+                <div class="text-[10.5px] font-bold text-amber-900 mt-0.5">
+                  เวลา 18.00 - 20.00 น.
+                </div>
+                <div class="text-[10px] font-semibold text-slate-800 leading-tight mt-0.5 pr-14">
+                  ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
+                </div>
+              </div>
+            </div>
+
+            <div class="ticket-content-layer flex items-center justify-between pt-1 border-t border-amber-700/25 pr-16">
+              <div class="text-[9px] font-medium text-slate-600">
+                โทร. 081-669-6653 • บัตร 1 ใบ / 1 ท่าน
+              </div>
+              <div class="inline-flex items-center gap-1 bg-amber-500 text-slate-950 font-extrabold text-[11.5px] px-2.5 py-0.5 rounded-full border border-amber-700 shadow-sm">
+                ราคา 100 บาท
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTickets() {
+      let start = parseInt(document.getElementById('startNumInput').value, 10) || 1;
+      let end = parseInt(document.getElementById('endNumInput').value, 10) || 10;
+      if (start < 1) start = 1;
+      if (end < start) end = start;
+      if (end - start > 499) {
+        end = start + 499;
+        document.getElementById('endNumInput').value = end;
+      }
+
+      const dateMode = document.getElementById('dateModeSelect').value;
+      const artworkMode = document.getElementById('artworkModeSelect').value;
+      const cols = parseInt(document.getElementById('layoutColumnsSelect').value, 10) || 2;
+      const perPage = cols === 2 ? 10 : 5;
+
+      const totalTickets = end - start + 1;
+      const totalValue = totalTickets * 100;
+      const totalPages = Math.ceil(totalTickets / perPage);
+
+      document.getElementById('ticketSummaryBadge').textContent =
+        `กำลังแสดงตั๋ว ${totalTickets.toLocaleString()} ใบ (NO.${formatSerial(start)} - NO.${formatSerial(end)}) • ${totalPages} หน้า A4 • มูลค่ารวม ${totalValue.toLocaleString()} บาท`;
+
+      const container = document.getElementById('sheetsContainer');
+      let sheetsHtml = '';
+
+      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+        const pageStart = start + pageIdx * perPage;
+        const pageEnd = Math.min(end, pageStart + perPage - 1);
+        let cardsHtml = '';
+        for (let num = pageStart; num <= pageEnd; num++) {
+          cardsHtml += renderSingleTicketHtml(num, dateMode, artworkMode);
+        }
+
+        const gridClass = cols === 2 ? 'tickets-grid-2col' : 'tickets-grid-1col';
+        sheetsHtml += `
+          <div class="a4-sheet">
+            <div class="flex items-center justify-between text-[9.5px] text-slate-500 border-b border-slate-200 pb-1 mb-2">
+              <span>บัตรชมมินิบอลลูน คนละ 100 บาท • เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20-21 พฤศจิกายน 2569 เวลา 18.00 - 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</span>
+              <span class="font-mono font-bold">แผ่นที่ ${pageIdx + 1}/${totalPages} (NO.${formatSerial(pageStart)}-${formatSerial(pageEnd)})</span>
+            </div>
+            <div class="${gridClass}">
+              ${cardsHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = sheetsHtml;
+    }
+
+    function openRecordSalesModal() {
+      const start = parseInt(document.getElementById('startNumInput').value, 10) || 1;
+      const end = parseInt(document.getElementById('endNumInput').value, 10) || 10;
+      document.getElementById('posStartSerial').value = start;
+      document.getElementById('posEndSerial').value = end;
+      document.getElementById('posFeedbackMsg').className = 'hidden';
+      updatePosModalCalc();
+      const modal = document.getElementById('recordSalesModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRecordSalesModal() {
+      const modal = document.getElementById('recordSalesModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updatePosModalCalc() {
+      const s = parseInt(document.getElementById('posStartSerial').value, 10) || 1;
+      const e = Math.max(s, parseInt(document.getElementById('posEndSerial').value, 10) || s);
+      const qty = e - s + 1;
+      const amount = qty * 100;
+      document.getElementById('posCalcDisplay').textContent =
+        `${qty.toLocaleString()} ใบ (NO.${formatSerial(s)}-${formatSerial(e)}) = ${amount.toLocaleString()} บาท`;
+    }
+
+    async function submitManualTicketBatch() {
+      const btn = document.getElementById('posSubmitBtn');
+      const feedback = document.getElementById('posFeedbackMsg');
+      const eventDate = document.getElementById('posDateSelect').value;
+      const s = parseInt(document.getElementById('posStartSerial').value, 10) || 1;
+      const e = Math.max(s, parseInt(document.getElementById('posEndSerial').value, 10) || s);
+      const qty = e - s + 1;
+      const paymentMethod = document.getElementById('posPaymentMethod').value;
+      const note = document.getElementById('posStaffNote').value.trim();
+      const rangeStr = `NO.${formatSerial(s)} - NO.${formatSerial(e)}`;
+
+      btn.disabled = true;
+      btn.textContent = 'กำลังบันทึกข้อมูลเข้า Supabase...';
+
+      try {
+        const record = await createBookingRecord({
+          category: 'balloon',
+          eventDate,
+          customerName: `ขายตั๋วรถหน้างาน (${rangeStr})`,
+          phone: '0816696653',
+          quantity: qty,
+          paymentMethod,
+          paymentStatus: 'approved',
+          checkedIn: true,
+          checkedInAt: new Date().toISOString(),
+          channel: 'walkin',
+          ticketSerialRange: rangeStr,
+          note: note || `ขายตั๋วฉีกหน้างาน ${rangeStr} (${qty} ใบ)`
+        });
+
+        feedback.className = 'block text-xs font-bold p-3 rounded-xl text-center bg-emerald-900/80 text-emerald-200 border border-emerald-500';
+        feedback.textContent = `✅ บันทึกยอดขายตั๋วมินิบอลลูน ${qty} ใบ (${(qty * 100).toLocaleString()} บาท) รหัส ${record.id} สำเร็จแล้ว!`;
+      } catch (err) {
+        feedback.className = 'block text-xs font-bold p-3 rounded-xl text-center bg-red-900/80 text-red-200 border border-red-500';
+        feedback.textContent = `เกิดข้อผิดพลาด: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ ยืนยันบันทึกยอดเข้าหน้ารายงาน Admin';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderTickets();
+    });
+  </script>
+</body>
+</html>

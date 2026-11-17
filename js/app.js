@@ -1,0 +1,1218 @@
+/**
+ * ระบบควบคุมหลักฝั่งลูกค้าและระบบหลังบ้านแอดมิน (Main Application Controller)
+ * โครงการ: เทศกาลท่องเที่ยวเมืองพร้าว 2569 (Phrao Tourism Festival 2026)
+ * ผู้พัฒนา: S.Y. Interactive Development Limited
+ */
+
+const APP_STATE = {
+  activeTab: 'lantern',
+  bookings: [],
+  settings: { ...DEFAULT_SETTINGS },
+  compressedSlips: {
+    lantern: '',
+    balloon: ''
+  }
+};
+
+const DATE_THAI_LABELS = {
+  '2026-11-24': 'อังคารที่ 24 พ.ย. 2569',
+  '2026-11-25': 'พุธที่ 25 พ.ย. 2569',
+  '2026-11-20': 'ศุกร์ที่ 20 พ.ย. 2569',
+  '2026-11-21': 'เสาร์ที่ 21 พ.ย. 2569'
+};
+
+/**
+ * เริ่มต้นระบบเมื่อโหลดหน้าเว็บ
+ */
+window.addEventListener('DOMContentLoaded', async () => {
+  onLanternQtyInput();
+  onBalloonQtyInput();
+  await syncAllDataFromCloud();
+});
+
+/**
+ * ซิงค์ข้อมูลการจองและการตั้งค่าจาก Supabase
+ */
+async function syncAllDataFromCloud() {
+  try {
+    const [bookings, settings] = await Promise.all([
+      fetchAllBookings(),
+      fetchFestivalSettings()
+    ]);
+    APP_STATE.bookings = bookings || [];
+    APP_STATE.settings = settings || { ...DEFAULT_SETTINGS };
+    updateCustomerQuotaBadges();
+    if (APP_STATE.activeTab === 'admin') {
+      renderAdminKpiAndInventory();
+      renderAdminBookingsTable();
+    }
+  } catch (err) {
+    console.warn('Sync notice:', err.message);
+  }
+}
+
+/**
+ * สลับแท็บหลักของแอป
+ */
+function switchMainTab(tabName) {
+  APP_STATE.activeTab = tabName;
+  const tabs = ['lantern', 'balloon', 'lookup', 'admin'];
+  tabs.forEach(t => {
+    const sec = document.getElementById(`tabSection-${t}`);
+    const btn = document.getElementById(`navBtn-${t}`);
+    if (sec) {
+      if (t === tabName) {
+        sec.classList.remove('hidden');
+      } else {
+        sec.classList.add('hidden');
+      }
+    }
+    if (btn) {
+      if (t === tabName) {
+        btn.className = 'px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20';
+      } else if (t === 'admin') {
+        btn.className = 'px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40';
+      } else {
+        btn.className = 'px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700';
+      }
+    }
+  });
+
+  if (tabName === 'admin') {
+    refreshAdminPortal();
+  }
+}
+
+/**
+ * อัปเดตป้ายแสดงโควตาโคมลอยคงเหลือในหน้าลูกค้า
+ */
+function updateCustomerQuotaBadges() {
+  const used24 = APP_STATE.bookings
+    .filter(b => b.category === 'lantern' && b.eventDate === '2026-11-24' && b.paymentStatus !== 'rejected')
+    .reduce((sum, b) => sum + Number(b.quantity || 0), 0);
+
+  const used25 = APP_STATE.bookings
+    .filter(b => b.category === 'lantern' && b.eventDate === '2026-11-25' && b.paymentStatus !== 'rejected')
+    .reduce((sum, b) => sum + Number(b.quantity || 0), 0);
+
+  const max24 = Number(APP_STATE.settings.quota_2026_11_24 || 200);
+  const max25 = Number(APP_STATE.settings.quota_2026_11_25 || 200);
+  const rem24 = Math.max(0, max24 - used24);
+  const rem25 = Math.max(0, max25 - used25);
+
+  const badge24 = document.getElementById('quotaBadge-2026-11-24');
+  const badge25 = document.getElementById('quotaBadge-2026-11-25');
+
+  if (badge24) {
+    if (!APP_STATE.settings.open_2026_11_24 || rem24 <= 0) {
+      badge24.textContent = 'เต็มแล้ว (Sold Out)';
+      badge24.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30';
+    } else {
+      badge24.textContent = `ว่าง ${rem24} โคม`;
+      badge24.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+    }
+  }
+
+  if (badge25) {
+    if (!APP_STATE.settings.open_2026_11_25 || rem25 <= 0) {
+      badge25.textContent = 'เต็มแล้ว (Sold Out)';
+      badge25.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30';
+    } else {
+      badge25.textContent = `ว่าง ${rem25} โคม`;
+      badge25.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+    }
+  }
+}
+
+/**
+ * เลือกวันที่ปล่อยโคมลอย (24 หรือ 25 พ.ย. 2569)
+ */
+function selectLanternDate(dateStr) {
+  document.getElementById('lanternSelectedDate').value = dateStr;
+  ['2026-11-24', '2026-11-25'].forEach(d => {
+    const btn = document.getElementById(`lanternDateBtn-${d}`);
+    if (!btn) return;
+    if (d === dateStr) {
+      btn.className = 'text-left p-4 rounded-2xl border-2 border-amber-400 bg-amber-500/15 transition relative';
+    } else {
+      btn.className = 'text-left p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/60 hover:border-slate-600 transition relative';
+    }
+  });
+}
+
+function adjustLanternQty(delta) {
+  const input = document.getElementById('lanternQtyInput');
+  let val = parseInt(input.value, 10) || 1;
+  val = Math.max(1, Math.min(50, val + delta));
+  input.value = val;
+  onLanternQtyInput();
+}
+
+function onLanternQtyInput() {
+  const input = document.getElementById('lanternQtyInput');
+  let qty = parseInt(input.value, 10) || 1;
+  if (qty < 1) qty = 1;
+  const attendees = qty * 2;
+  const total = qty * 299;
+
+  document.getElementById('lanternCalcAttendees').textContent = `${qty} โคม (สำหรับ ${attendees} ท่าน)`;
+  document.getElementById('lanternCalcTotal').textContent = total.toLocaleString();
+  const copyBtn = document.getElementById('lanternCopyBtnAmount');
+  if (copyBtn) copyBtn.textContent = total.toLocaleString();
+}
+
+/**
+ * เลือกวันที่ชมมินิบอลลูน (20 หรือ 21 พ.ย. 2569)
+ */
+function selectBalloonDate(dateStr) {
+  document.getElementById('balloonSelectedDate').value = dateStr;
+  ['2026-11-20', '2026-11-21'].forEach(d => {
+    const btn = document.getElementById(`balloonDateBtn-${d}`);
+    if (!btn) return;
+    if (d === dateStr) {
+      btn.className = 'text-left p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-500/15 transition';
+    } else {
+      btn.className = 'text-left p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/60 transition';
+    }
+  });
+}
+
+function adjustBalloonQty(delta) {
+  const input = document.getElementById('balloonQtyInput');
+  let val = parseInt(input.value, 10) || 1;
+  val = Math.max(1, Math.min(100, val + delta));
+  input.value = val;
+  onBalloonQtyInput();
+}
+
+function onBalloonQtyInput() {
+  const input = document.getElementById('balloonQtyInput');
+  let qty = parseInt(input.value, 10) || 1;
+  if (qty < 1) qty = 1;
+  const total = qty * 100;
+  document.getElementById('balloonCalcAttendees').textContent = `${qty} ท่าน`;
+  document.getElementById('balloonCalcTotal').textContent = total.toLocaleString();
+}
+
+/**
+ * คัดลอกยอดโอนเงิน
+ */
+function copyCurrentAmount(category) {
+  const qty = parseInt(document.getElementById(category === 'lantern' ? 'lanternQtyInput' : 'balloonQtyInput').value, 10) || 1;
+  const amount = category === 'lantern' ? qty * 299 : qty * 100;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(String(amount)).catch(() => {});
+  }
+  const btnSpan = document.getElementById('lanternCopyBtnAmount');
+  if (btnSpan) {
+    const orig = btnSpan.textContent;
+    btnSpan.textContent = `${amount.toLocaleString()} (คัดลอกแล้ว!)`;
+    setTimeout(() => { btnSpan.textContent = orig; }, 1800);
+  }
+}
+
+/**
+ * แสดงตัวอย่างและบีบอัดรูปสลิปเมื่อลูกค้าเลือกไฟล์
+ */
+async function previewBookingSlip(event, category) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await compressSlipImage(file, 880, 0.78);
+    APP_STATE.compressedSlips[category] = dataUrl;
+    const wrap = document.getElementById(`${category}SlipPreviewWrap`);
+    const img = document.getElementById(`${category}SlipPreviewImg`);
+    if (img) img.src = dataUrl;
+    if (wrap) wrap.classList.remove('hidden');
+  } catch (err) {
+    const errBox = document.getElementById(`${category}FormError`);
+    if (errBox) {
+      errBox.textContent = err.message;
+      errBox.classList.remove('hidden');
+    }
+  }
+}
+
+/**
+ * บันทึกการจองของลูกค้า (โคมลอย หรือ มินิบอลลูน) ลง Supabase และออก E-Ticket ทันที
+ */
+async function submitCustomerBooking(event, category) {
+  event.preventDefault();
+  const isLantern = category === 'lantern';
+  const errBox = document.getElementById(`${category}FormError`);
+  const submitBtn = document.getElementById(`${category}SubmitBtn`);
+  if (errBox) errBox.classList.add('hidden');
+
+  const eventDate = document.getElementById(`${category}SelectedDate`).value;
+  const quantity = parseInt(document.getElementById(`${category}QtyInput`).value, 10) || 1;
+  const customerName = document.getElementById(`${category}CustomerName`).value.trim();
+  const rawPhone = document.getElementById(`${category}CustomerPhone`).value.trim();
+  const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+  const note = document.getElementById(`${category}CustomerNote`).value.trim();
+  const slipDataUrl = APP_STATE.compressedSlips[category];
+
+  if (!customerName) {
+    errBox.textContent = 'กรุณากรอกชื่อผู้จอง';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  if (cleanPhone.length < 9) {
+    errBox.textContent = 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (อย่างน้อย 9-10 หลัก)';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  if (!slipDataUrl) {
+    errBox.textContent = 'กรุณาแนบรูปสลิปโอนเงินก่อนกดยืนยันการจอง';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  // ตรวจสอบสถานะเปิดรับจอง
+  if (isLantern) {
+    const openKey = eventDate === '2026-11-24' ? 'open_2026_11_24' : 'open_2026_11_25';
+    if (APP_STATE.settings[openKey] === false) {
+      errBox.textContent = `ขออภัย วันที่ ${DATE_THAI_LABELS[eventDate]} ปิดรับพรีออเดอร์แล้ว กรุณาเลือกวันอื่น`;
+      errBox.classList.remove('hidden');
+      return;
+    }
+  }
+
+  const origBtnHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '⏳ กำลังบันทึกข้อมูลและออกบัตร E-Ticket...';
+
+  try {
+    const newBooking = await createBookingRecord({
+      category,
+      eventDate,
+      customerName,
+      phone: cleanPhone,
+      quantity,
+      paymentMethod: 'promptpay_qr',
+      slipDataUrl,
+      paymentStatus: 'pending',
+      checkedIn: false,
+      channel: 'online',
+      note
+    });
+
+    // อัปเดต State ในแอป
+    APP_STATE.bookings = [newBooking, ...APP_STATE.bookings.filter(b => b.id !== newBooking.id)];
+    updateCustomerQuotaBadges();
+
+    // รีเซ็ตฟอร์ม
+    document.getElementById(`${category}BookingForm`).reset();
+    APP_STATE.compressedSlips[category] = '';
+    const previewWrap = document.getElementById(`${category}SlipPreviewWrap`);
+    if (previewWrap) previewWrap.classList.add('hidden');
+    if (isLantern) {
+      document.getElementById('lanternQtyInput').value = 1;
+      onLanternQtyInput();
+    } else {
+      document.getElementById('balloonQtyInput').value = 2;
+      onBalloonQtyInput();
+    }
+
+    // แสดง E-Ticket ทันที
+    showETicketModal(newBooking);
+  } catch (err) {
+    errBox.textContent = `เกิดข้อผิดพลาด: ${err.message}`;
+    errBox.classList.remove('hidden');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = origBtnHtml;
+  }
+}
+
+/**
+ * แสดงหน้าต่างบัตร E-Ticket พร้อม QR Code และปุ่มดาวน์โหลดเป็นรูปภาพ PNG
+ */
+function showETicketModal(booking) {
+  if (!booking) return;
+  const isLantern = booking.category === 'lantern';
+  const body = document.getElementById('eTicketModalBody');
+
+  const statusBadge = booking.checkedIn
+    ? `<span class="inline-block px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-extrabold">🏮 เช็คอินรับโคมเรียบร้อยแล้ว</span>`
+    : booking.paymentStatus === 'approved'
+      ? `<span class="inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">✅ อนุมัติสลิปแล้ว (ยืนยันสมบูรณ์)</span>`
+      : booking.paymentStatus === 'rejected'
+        ? `<span class="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-xs font-extrabold">❌ รายการถูกยกเลิก</span>`
+        : `<span class="inline-block px-3 py-1 rounded-full bg-amber-500 text-slate-950 text-xs font-extrabold">⏳ แนบสลิปแล้ว (ใช้ยื่นหน้างานได้ทันที)</span>`;
+
+  body.innerHTML = `
+    <div class="text-center border-b border-amber-300 pb-3 space-y-1">
+      <div class="text-xs font-bold text-amber-800">เทศกาลท่องเที่ยวเมืองพร้าว 2569 • ณ โฮงชาฮักมี</div>
+      <div class="text-lg font-extrabold text-slate-950">
+        ${isLantern ? '🏮 บัตรพรีออเดอร์ปล่อยโคมลอย' : '🎈 บัตรเข้าชมมินิบอลลูน'}
+      </div>
+      <div class="text-2xl font-extrabold text-amber-700 font-mono tracking-wider">${booking.id}</div>
+      <div>${statusBadge}</div>
+    </div>
+
+    <div class="space-y-1.5 text-xs md:text-sm py-1">
+      <div class="flex justify-between">
+        <span class="text-slate-600 font-medium">ชื่อผู้จอง:</span>
+        <span class="font-extrabold text-slate-900">${escapeHtml(booking.customerName)}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-600 font-medium">เบอร์โทรศัพท์:</span>
+        <span class="font-bold text-slate-900">${escapeHtml(booking.phone)}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-600 font-medium">วันที่เข้าร่วม:</span>
+        <span class="font-extrabold text-amber-800">${DATE_THAI_LABELS[booking.eventDate] || booking.eventDate}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-600 font-medium">จำนวนสิทธิ์:</span>
+        <span class="font-extrabold text-slate-900">
+          ${isLantern ? `${booking.quantity} โคม (${booking.attendees} ท่าน)` : `${booking.quantity} ใบ (${booking.attendees} ท่าน)`}
+        </span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-600 font-medium">ยอดชำระรวม:</span>
+        <span class="font-extrabold text-emerald-700">${Number(booking.totalAmount).toLocaleString()} บาท</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-600 font-medium">กำหนดการ:</span>
+        <span class="font-bold text-slate-800">
+          ${isLantern ? 'ลงทะเบียน 18.00 น. / ปล่อยโคม 20.00 น.' : 'เวลา 18.00 - 20.00 น.'}
+        </span>
+      </div>
+    </div>
+
+    ${isLantern ? `
+      <div class="p-2.5 rounded-xl bg-amber-100 border border-amber-400 text-[11px] font-bold text-amber-900 text-center">
+        สิ่งที่ได้รับ: โคมลอยไซส์ XL • ไฟแช็ค • เทียน • ปากกา • เครื่องดื่ม • ของที่ระลึก
+      </div>
+    ` : ''}
+
+    <div class="pt-2 flex flex-col items-center">
+      <canvas id="modalETicketQrCanvas" class="rounded-xl border border-slate-300 shadow-sm"></canvas>
+      <span class="text-[11px] text-slate-500 mt-1">ยื่นรหัสหรือ QR นี้ที่จุดลงทะเบียน ณ โฮงชาฮักมี เวลา 18.00 น.</span>
+      <span class="text-[10px] text-slate-400 mt-0.5">Developed by S.Y. Interactive Development Limited</span>
+    </div>
+  `;
+
+  const qrCanvas = document.getElementById('modalETicketQrCanvas');
+  drawTicketMatrixCode(qrCanvas, `${booking.id}|${booking.phone}|${booking.eventDate}`);
+
+  const dlBtn = document.getElementById('eTicketDownloadBtn');
+  dlBtn.onclick = () => downloadETicketAsPng(booking);
+
+  const modal = document.getElementById('eTicketModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeETicketModal() {
+  const modal = document.getElementById('eTicketModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+/**
+ * ค้นหาบัตรของลูกค้าด้วยเบอร์โทรศัพท์หรือรหัสจอง (แท็บค้นหาบัตร)
+ */
+async function handleCustomerTicketLookup(event) {
+  event.preventDefault();
+  const q = document.getElementById('lookupSearchInput').value.trim();
+  const container = document.getElementById('lookupResultsContainer');
+  container.innerHTML = `<div class="text-center text-sm text-amber-300 py-4">⏳ กำลังค้นหาข้อมูลบัตร...</div>`;
+
+  const matches = await findBookingsByQuery(q);
+  if (!matches || matches.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 rounded-2xl bg-slate-800/80 border border-slate-700 text-center space-y-1">
+        <div class="text-base font-bold text-amber-300">ไม่พบข้อมูลบัตรที่ตรงกับ "${escapeHtml(q)}"</div>
+        <div class="text-xs text-slate-400">กรุณาตรวจสอบเบอร์โทรศัพท์ที่ใช้จอง หรือติดต่อ 081-669-6653 (คุณฝ้าย)</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = matches.map(b => {
+    const isLantern = b.category === 'lantern';
+    const statusText = b.checkedIn
+      ? '🏮 เช็คอินรับโคมแล้ว'
+      : b.paymentStatus === 'approved'
+        ? '✅ อนุมัติสลิปแล้ว'
+        : b.paymentStatus === 'rejected'
+          ? '❌ ยกเลิก'
+          : '⏳ รอตรวจสลิป (ใช้ยื่นหน้างานได้)';
+    return `
+      <div class="p-4 rounded-2xl bg-slate-800/90 border border-amber-500/35 flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-base font-extrabold text-amber-400 font-mono">${b.id}</span>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-900 text-amber-200 border border-amber-500/30 font-bold">${statusText}</span>
+          </div>
+          <div class="text-sm font-bold text-white">
+            ${escapeHtml(b.customerName)} (${escapeHtml(b.phone)})
+          </div>
+          <div class="text-xs text-slate-300">
+            ${isLantern ? '🏮 โคมลอย' : '🎈 มินิบอลลูน'} • ${DATE_THAI_LABELS[b.eventDate] || b.eventDate} •
+            ${b.quantity} ${isLantern ? 'โคม' : 'ใบ'} (${b.attendees} ท่าน) • ยอด ${Number(b.totalAmount).toLocaleString()} บาท
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openTicketById('${b.id}')"
+            class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow">
+            🎫 เปิดดูบัตร / ดาวน์โหลด PNG
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openTicketById(id) {
+  const b = APP_STATE.bookings.find(item => item.id === id) || getLocalBookingsCache().find(item => item.id === id);
+  if (b) showETicketModal(b);
+}
+
+/* ============================================================================
+ * ระบบหลังบ้านแอดมินครบ 8 โมดูล (ADMIN BACKOFFICE & REPORTING)
+ * ============================================================================ */
+
+function isAdminLoggedIn() {
+  return sessionStorage.getItem(STORAGE_KEYS.ADMIN_AUTH) === 'authenticated';
+}
+
+function getAdminCredentials() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_CREDS);
+    if (saved) return JSON.parse(saved);
+  } catch (_) {}
+  return { username: 'admin', password: 'phrao2569' };
+}
+
+function handleAdminNavClick() {
+  if (isAdminLoggedIn()) {
+    switchMainTab('admin');
+  } else {
+    const modal = document.getElementById('adminLoginModal');
+    document.getElementById('adminLoginError').classList.add('hidden');
+    document.getElementById('adminPasswordInput').value = '';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+
+function closeAdminLoginModal() {
+  const modal = document.getElementById('adminLoginModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function submitAdminLogin(event) {
+  event.preventDefault();
+  const user = document.getElementById('adminUsernameInput').value.trim();
+  const pass = document.getElementById('adminPasswordInput').value.trim();
+  const creds = getAdminCredentials();
+
+  if (user.toLowerCase() === creds.username.toLowerCase() && pass === creds.password) {
+    sessionStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, 'authenticated');
+    closeAdminLoginModal();
+    switchMainTab('admin');
+  } else {
+    const err = document.getElementById('adminLoginError');
+    err.textContent = 'รหัสผ่านไม่ถูกต้อง (ค่าเริ่มต้น: admin / phrao2569)';
+    err.classList.remove('hidden');
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem(STORAGE_KEYS.ADMIN_AUTH);
+  switchMainTab('lantern');
+}
+
+async function refreshAdminPortal() {
+  await syncAllDataFromCloud();
+  renderAdminKpiAndInventory();
+  renderAdminBookingsTable();
+}
+
+/**
+ * โมดูลที่ 2: แสดง KPI Cards 6 การ์ดหลัก + ตารางคำนวณสิ่งของที่สตาฟต้องจัดเตรียมหน้างาน
+ */
+function renderAdminKpiAndInventory() {
+  const activeBookings = APP_STATE.bookings.filter(b => b.paymentStatus !== 'rejected');
+
+  const totalRevenue = activeBookings.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+  const approvedRevenue = activeBookings
+    .filter(b => b.paymentStatus === 'approved')
+    .reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+  const pendingRevenue = activeBookings
+    .filter(b => b.paymentStatus === 'pending')
+    .reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+
+  // โคมลอย 24 พ.ย.
+  const l24 = activeBookings.filter(b => b.category === 'lantern' && b.eventDate === '2026-11-24');
+  const l24Qty = l24.reduce((s, b) => s + Number(b.quantity || 0), 0);
+  const l24People = l24.reduce((s, b) => s + Number(b.attendees || 0), 0);
+  const l24Rev = l24.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+  const l24Rem = Math.max(0, Number(APP_STATE.settings.quota_2026_11_24 || 200) - l24Qty);
+
+  // โคมลอย 25 พ.ย.
+  const l25 = activeBookings.filter(b => b.category === 'lantern' && b.eventDate === '2026-11-25');
+  const l25Qty = l25.reduce((s, b) => s + Number(b.quantity || 0), 0);
+  const l25People = l25.reduce((s, b) => s + Number(b.attendees || 0), 0);
+  const l25Rev = l25.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+  const l25Rem = Math.max(0, Number(APP_STATE.settings.quota_2026_11_25 || 200) - l25Qty);
+
+  // มินิบอลลูน 20 พ.ย.
+  const b20 = activeBookings.filter(b => b.category === 'balloon' && b.eventDate === '2026-11-20');
+  const b20Qty = b20.reduce((s, b) => s + Number(b.quantity || 0), 0);
+  const b20Rev = b20.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+
+  // มินิบอลลูน 21 พ.ย.
+  const b21 = activeBookings.filter(b => b.category === 'balloon' && b.eventDate === '2026-11-21');
+  const b21Qty = b21.reduce((s, b) => s + Number(b.quantity || 0), 0);
+  const b21Rev = b21.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+
+  // สถานะเช็คอิน
+  const checkedInCount = activeBookings.filter(b => b.checkedIn).length;
+  const waitingCheckinCount = activeBookings.filter(b => !b.checkedIn).length;
+
+  const kpiGrid = document.getElementById('adminKpiGrid');
+  if (kpiGrid) {
+    kpiGrid.innerHTML = `
+      <div class="bg-slate-900 border border-amber-500/40 rounded-2xl p-4 space-y-1">
+        <div class="text-xs font-bold text-amber-300">💰 รายได้รวมทั้งเทศกาล</div>
+        <div class="text-2xl font-extrabold text-white">${totalRevenue.toLocaleString()} บาท</div>
+        <div class="text-[11px] text-slate-400">
+          อนุมัติแล้ว: <strong class="text-emerald-400">${approvedRevenue.toLocaleString()}฿</strong> •
+          รอตรวจสลิป: <strong class="text-amber-300">${pendingRevenue.toLocaleString()}฿</strong>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+        <div class="text-xs font-bold text-amber-400">🏮 โคมลอย อังคาร 24 พ.ย. 2569</div>
+        <div class="text-xl font-extrabold text-white">${l24Qty.toLocaleString()} โคม <span class="text-sm font-normal text-slate-300">(${l24People.toLocaleString()} ท่าน)</span></div>
+        <div class="text-[11px] text-slate-400">
+          ยอดเงิน: <strong class="text-amber-300">${l24Rev.toLocaleString()}฿</strong> • โควตาคงเหลือ: <strong>${l24Rem} โคม</strong>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+        <div class="text-xs font-bold text-amber-400">🏮 โคมลอย พุธ 25 พ.ย. 2569</div>
+        <div class="text-xl font-extrabold text-white">${l25Qty.toLocaleString()} โคม <span class="text-sm font-normal text-slate-300">(${l25People.toLocaleString()} ท่าน)</span></div>
+        <div class="text-[11px] text-slate-400">
+          ยอดเงิน: <strong class="text-amber-300">${l25Rev.toLocaleString()}฿</strong> • โควตาคงเหลือ: <strong>${l25Rem} โคม</strong>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+        <div class="text-xs font-bold text-emerald-400">🎈 บัตรมินิบอลลูน ศุกร์ 20 พ.ย. 2569</div>
+        <div class="text-xl font-extrabold text-white">${b20Qty.toLocaleString()} ใบ / ท่าน</div>
+        <div class="text-[11px] text-slate-400">
+          ยอดเงินรวม (ออนไลน์+ตั๋วรถหน้างาน): <strong class="text-emerald-300">${b20Rev.toLocaleString()}฿</strong>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+        <div class="text-xs font-bold text-emerald-400">🎈 บัตรมินิบอลลูน เสาร์ 21 พ.ย. 2569</div>
+        <div class="text-xl font-extrabold text-white">${b21Qty.toLocaleString()} ใบ / ท่าน</div>
+        <div class="text-[11px] text-slate-400">
+          ยอดเงินรวม (ออนไลน์+ตั๋วรถหน้างาน): <strong class="text-emerald-300">${b21Rev.toLocaleString()}฿</strong>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-1">
+        <div class="text-xs font-bold text-blue-400">✅ สถานะเช็คอินหน้างาน 18.00 น.</div>
+        <div class="text-xl font-extrabold text-white">เช็คอินแล้ว ${checkedInCount} รายการ</div>
+        <div class="text-[11px] text-slate-400">
+          รอมารับของหน้างาน: <strong class="text-amber-300">${waitingCheckinCount} รายการ</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  // ตารางคำนวณสิ่งของที่สตาฟต้องเตรียมหน้างาน (Inventory Calculator)
+  const totalLanternsAll = l24Qty + l25Qty;
+  const totalPeopleAll = l24People + l25People;
+  const invWrap = document.getElementById('adminInventoryTableWrap');
+  if (invWrap) {
+    invWrap.innerHTML = `
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="border-b border-slate-800 text-slate-400">
+            <th class="py-2 px-2">รายการสิ่งของในเซ็ต</th>
+            <th class="py-2 px-2 text-center">อังคาร 24 พ.ย. 69</th>
+            <th class="py-2 px-2 text-center">พุธ 25 พ.ย. 69</th>
+            <th class="py-2 px-2 text-right text-amber-300">รวมต้องเตรียมทั้งหมด</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 text-slate-200">
+          <tr>
+            <td class="py-2 px-2 font-semibold">1. 🏮 โคมลอยไซส์ XL</td>
+            <td class="py-2 px-2 text-center font-bold">${l24Qty} ลูก</td>
+            <td class="py-2 px-2 text-center font-bold">${l25Qty} ลูก</td>
+            <td class="py-2 px-2 text-right font-extrabold text-amber-400">${totalLanternsAll} ลูก</td>
+          </tr>
+          <tr>
+            <td class="py-2 px-2 font-semibold">2. 🔥 ไฟแช็ค + 3. 🕯️ เทียน + 4. 🖊️ ปากกา</td>
+            <td class="py-2 px-2 text-center font-bold">อย่างละ ${l24Qty} ชิ้น</td>
+            <td class="py-2 px-2 text-center font-bold">อย่างละ ${l25Qty} ชิ้น</td>
+            <td class="py-2 px-2 text-right font-extrabold text-amber-400">อย่างละ ${totalLanternsAll} ชิ้น</td>
+          </tr>
+          <tr>
+            <td class="py-2 px-2 font-semibold">5. 🥤 เครื่องดื่ม & 6. 🎀 ของที่ระลึก</td>
+            <td class="py-2 px-2 text-center font-bold">${l24Qty} ชุด (${l24People} ท่าน)</td>
+            <td class="py-2 px-2 text-center font-bold">${l25Qty} ชุด (${l25People} ท่าน)</td>
+            <td class="py-2 px-2 text-right font-extrabold text-emerald-400">${totalLanternsAll} ชุด (${totalPeopleAll} ท่าน)</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+/**
+ * โมดูลที่ 3: ตารางรายการจอง ตรวจสลิป เช็คอิน และแก้ไขใบจอง
+ */
+function getFilteredAdminBookings() {
+  const catDateFilter = document.getElementById('adminFilterCategoryDate')?.value || 'all';
+  const statusFilter = document.getElementById('adminFilterStatus')?.value || 'all';
+  const searchStr = (document.getElementById('adminSearchInput')?.value || '').trim().toLowerCase();
+
+  return APP_STATE.bookings.filter(b => {
+    if (catDateFilter !== 'all') {
+      const [cat, dt] = catDateFilter.split('_');
+      if (b.category !== cat || b.eventDate !== dt) return false;
+    }
+    if (statusFilter === 'pending' && b.paymentStatus !== 'pending') return false;
+    if (statusFilter === 'approved' && b.paymentStatus !== 'approved') return false;
+    if (statusFilter === 'rejected' && b.paymentStatus !== 'rejected') return false;
+    if (statusFilter === 'checkedin' && !b.checkedIn) return false;
+    if (statusFilter === 'not_checkedin' && b.checkedIn) return false;
+
+    if (searchStr) {
+      const hay = `${b.id} ${b.customerName} ${b.phone} ${b.note || ''}`.toLowerCase();
+      if (!hay.includes(searchStr)) return false;
+    }
+    return true;
+  });
+}
+
+function renderAdminBookingsTable() {
+  const tbody = document.getElementById('adminBookingsTableBody');
+  if (!tbody) return;
+  const rows = getFilteredAdminBookings();
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="py-8 text-center text-slate-400">
+          ยังไม่มีรายการจองที่ตรงกับตัวกรอง (สามารถกดปุ่ม "➕ บันทึกขายหน้างาน" หรือทดสอบจองจากหน้าลูกค้าได้ทันที)
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(b => {
+    const isLantern = b.category === 'lantern';
+    const statusPill = b.paymentStatus === 'approved'
+      ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">✅ อนุมัติแล้ว</span>`
+      : b.paymentStatus === 'rejected'
+        ? `<span class="px-2.5 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-bold">❌ ยกเลิก</span>`
+        : `<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">⏳ รอตรวจสลิป</span>`;
+
+    const slipBtn = b.slipDataUrl
+      ? `<button onclick="openSlipInspectorModal('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold">🔍 ดูสลิป</button>`
+      : `<span class="text-slate-500">${b.channel === 'walkin' ? 'ขายหน้างาน' : 'ไม่มีรูป'}</span>`;
+
+    const checkinBtn = b.checkedIn
+      ? `<button onclick="adminToggleCheckin('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-blue-600/30 text-blue-200 border border-blue-500/40 font-bold" title="คลิกเพื่อยกเลิกสถานะเช็คอิน">🏮 รับของแล้ว</button>`
+      : `<button onclick="adminToggleCheckin('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-300 border border-slate-700 font-bold transition">กดเช็คอิน</button>`;
+
+    return `
+      <tr class="hover:bg-slate-800/50 transition">
+        <td class="py-3 px-2.5 font-mono font-extrabold text-amber-400">${b.id}</td>
+        <td class="py-3 px-2.5">
+          <div class="font-bold text-white">${isLantern ? '🏮 โคมลอย' : '🎈 มินิบอลลูน'}</div>
+          <div class="text-[11px] text-slate-400">${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</div>
+        </td>
+        <td class="py-3 px-2.5">
+          <div class="font-bold text-white">${escapeHtml(b.customerName)}</div>
+          <div class="text-[11px] text-slate-400">${escapeHtml(b.phone)} ${b.note ? `• ${escapeHtml(b.note)}` : ''}</div>
+        </td>
+        <td class="py-3 px-2.5 font-bold text-slate-200">
+          ${b.quantity} ${isLantern ? 'โคม' : 'ใบ'} <span class="text-slate-400 font-normal">(${b.attendees} ท่าน)</span>
+        </td>
+        <td class="py-3 px-2.5 font-extrabold text-emerald-400">${Number(b.totalAmount).toLocaleString()}฿</td>
+        <td class="py-3 px-2.5">${slipBtn}</td>
+        <td class="py-3 px-2.5">${statusPill}</td>
+        <td class="py-3 px-2.5">${checkinBtn}</td>
+        <td class="py-3 px-2.5 text-right space-x-1">
+          ${b.paymentStatus !== 'approved' ? `
+            <button onclick="adminChangeSlipStatus('${b.id}', 'approved')" class="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold" title="อนุมัติสลิป">✓ อนุมัติ</button>
+          ` : ''}
+          <button onclick="openTicketById('${b.id}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold" title="เปิดบัตร E-Ticket">🎫 บัตร</button>
+          <button onclick="openEditBookingModal('${b.id}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold" title="แก้ไขข้อมูล">✏️</button>
+          <button onclick="adminDeleteBooking('${b.id}')" class="px-2 py-1 rounded bg-red-950/80 hover:bg-red-800 text-red-300 border border-red-800/50 font-bold" title="ลบรายการ">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * หน้าต่างตรวจสอบรูปสลิปโอนเงินขนาดใหญ่ (Slip Inspector Modal)
+ */
+function openSlipInspectorModal(bookingId) {
+  const b = APP_STATE.bookings.find(item => item.id === bookingId);
+  if (!b) return;
+  const content = document.getElementById('slipInspectorContent');
+  content.innerHTML = `
+    <div class="p-3 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-between">
+      <div>
+        <div class="font-extrabold text-white text-sm">${escapeHtml(b.customerName)} (${escapeHtml(b.phone)})</div>
+        <div class="text-slate-400">รหัส: <strong class="text-amber-300">${b.id}</strong> • ${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-slate-400">ยอดที่ต้องโอน</div>
+        <div class="text-lg font-extrabold text-emerald-400">${Number(b.totalAmount).toLocaleString()} บาท</div>
+      </div>
+    </div>
+
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center">
+      ${b.slipDataUrl
+        ? `<img src="${b.slipDataUrl}" alt="สลิปโอนเงิน" class="max-h-96 mx-auto rounded-xl object-contain" />`
+        : `<div class="py-12 text-slate-500">ไม่มีรูปสลิปแนบ</div>`
+      }
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 pt-2">
+      <button onclick="adminChangeSlipStatus('${b.id}', 'approved', true)"
+        class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+        ✅ อนุมัติสลิปถูกต้อง
+      </button>
+      <button onclick="adminChangeSlipStatus('${b.id}', 'pending', true)"
+        class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs">
+        ⏳ รอตรวจสอบ
+      </button>
+      <button onclick="adminChangeSlipStatus('${b.id}', 'rejected', true)"
+        class="py-2.5 px-3 rounded-xl bg-red-600/25 hover:bg-red-600/40 text-red-300 border border-red-500/40 font-bold text-xs">
+        ❌ ปฏิเสธ/ยกเลิก
+      </button>
+    </div>
+  `;
+
+  const modal = document.getElementById('slipInspectorModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeSlipInspectorModal() {
+  const modal = document.getElementById('slipInspectorModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function adminChangeSlipStatus(bookingId, newStatus, closeModal = false) {
+  await updateBookingRecord(bookingId, { paymentStatus: newStatus });
+  if (closeModal) closeSlipInspectorModal();
+  await refreshAdminPortal();
+}
+
+/**
+ * โมดูลที่ 4: ระบบเช็คอินหน้างาน 18.00 น. พร้อมระบบแจ้งเตือนป้องกันการรับโคมซ้ำ
+ */
+function performQuickCheckinSearch() {
+  const q = (document.getElementById('quickCheckinInput')?.value || '').trim().toLowerCase();
+  const box = document.getElementById('quickCheckinResultBox');
+  if (!q) {
+    box.innerHTML = '';
+    return;
+  }
+
+  const matches = APP_STATE.bookings.filter(b =>
+    b.id.toLowerCase().includes(q) ||
+    b.phone.includes(q) ||
+    b.customerName.toLowerCase().includes(q)
+  );
+
+  if (matches.length === 0) {
+    box.innerHTML = `<div class="p-3 rounded-xl bg-red-950/70 border border-red-500/40 text-xs text-red-200 font-bold">ไม่พบรหัสจองหรือเบอร์โทรนี้</div>`;
+    return;
+  }
+
+  box.innerHTML = matches.slice(0, 3).map(b => {
+    const isLantern = b.category === 'lantern';
+    if (b.checkedIn) {
+      const timeStr = b.checkedInAt ? new Date(b.checkedInAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '';
+      return `
+        <div class="p-3.5 rounded-2xl bg-red-950/90 border-2 border-red-500 space-y-1">
+          <div class="text-xs font-extrabold text-red-300">⚠️ แจ้งเตือน: รหัส ${b.id} รับโคม/เช็คอินไปแล้ว! ${timeStr ? `(เวลา ${timeStr} น.)` : ''}</div>
+          <div class="text-xs text-white font-bold">${escapeHtml(b.customerName)} (${escapeHtml(b.phone)}) • ${b.quantity} ${isLantern ? 'โคม' : 'ใบ'}</div>
+        </div>
+      `;
+    }
+    return `
+      <div class="p-3.5 rounded-2xl bg-slate-800 border border-emerald-500/40 flex items-center justify-between gap-2">
+        <div class="text-xs">
+          <div class="font-extrabold text-amber-400">${b.id} • ${escapeHtml(b.customerName)}</div>
+          <div class="text-slate-300">${DATE_THAI_LABELS[b.eventDate] || b.eventDate} • ส่งมอบ <strong class="text-white">${b.quantity} ${isLantern ? 'โคม' : 'ใบ'} (${b.attendees} ท่าน)</strong></div>
+        </div>
+        <button onclick="adminToggleCheckin('${b.id}')"
+          class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow">
+          🏮 ยืนยันเช็คอินรับโคม
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function adminToggleCheckin(bookingId) {
+  const b = APP_STATE.bookings.find(item => item.id === bookingId);
+  if (!b) return;
+  const nextChecked = !b.checkedIn;
+  await updateBookingRecord(bookingId, {
+    checkedIn: nextChecked,
+    checkedInAt: nextChecked ? new Date().toISOString() : null,
+    paymentStatus: nextChecked ? 'approved' : b.paymentStatus
+  });
+  await refreshAdminPortal();
+  if (document.getElementById('quickCheckinInput')?.value) {
+    performQuickCheckinSearch();
+  }
+}
+
+/**
+ * แก้ไขข้อมูลการจองของลูกค้า (Edit Booking Modal)
+ */
+function openEditBookingModal(bookingId) {
+  const b = APP_STATE.bookings.find(item => item.id === bookingId);
+  if (!b) return;
+  document.getElementById('editBookingId').value = b.id;
+  document.getElementById('editCustomerName').value = b.customerName;
+  document.getElementById('editCustomerPhone').value = b.phone;
+  document.getElementById('editEventDate').value = b.eventDate;
+  document.getElementById('editQuantity').value = b.quantity;
+  document.getElementById('editNote').value = b.note || '';
+
+  const modal = document.getElementById('editBookingModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeEditBookingModal() {
+  const modal = document.getElementById('editBookingModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function submitEditBookingForm(event) {
+  event.preventDefault();
+  const id = document.getElementById('editBookingId').value;
+  const customerName = document.getElementById('editCustomerName').value.trim();
+  const phone = document.getElementById('editCustomerPhone').value.trim();
+  const eventDate = document.getElementById('editEventDate').value;
+  const quantity = Math.max(1, parseInt(document.getElementById('editQuantity').value, 10) || 1);
+  const note = document.getElementById('editNote').value.trim();
+  const category = (eventDate === '2026-11-24' || eventDate === '2026-11-25') ? 'lantern' : 'balloon';
+
+  await updateBookingRecord(id, {
+    category,
+    eventDate,
+    customerName,
+    phone,
+    quantity,
+    note
+  });
+  closeEditBookingModal();
+  await refreshAdminPortal();
+}
+
+async function adminDeleteBooking(bookingId) {
+  await deleteBookingRecord(bookingId);
+  await refreshAdminPortal();
+}
+
+/**
+ * โมดูลที่ 5: บันทึกยอดขายหน้างาน (Walk-in & ขายตั๋วรถมินิบอลลูน POS)
+ */
+function openWalkinPosModal() {
+  updateWalkinPosCalc();
+  const modal = document.getElementById('walkinPosModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeWalkinPosModal() {
+  const modal = document.getElementById('walkinPosModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function updateWalkinPosCalc() {
+  const val = document.getElementById('walkinCategoryDate').value;
+  const [cat] = val.split('|');
+  const qty = Math.max(1, parseInt(document.getElementById('walkinQty').value, 10) || 1);
+  const total = qty * (cat === 'lantern' ? 299 : 100);
+  document.getElementById('walkinCalcTotal').textContent = `${total.toLocaleString()} บาท`;
+}
+
+async function submitWalkinPosForm(event) {
+  event.preventDefault();
+  const [category, eventDate] = document.getElementById('walkinCategoryDate').value.split('|');
+  const quantity = Math.max(1, parseInt(document.getElementById('walkinQty').value, 10) || 1);
+  const paymentMethod = document.getElementById('walkinPayMethod').value;
+  const title = document.getElementById('walkinTitle').value.trim();
+
+  await createBookingRecord({
+    category,
+    eventDate,
+    customerName: title,
+    phone: '0816696653',
+    quantity,
+    paymentMethod,
+    paymentStatus: 'approved',
+    checkedIn: true,
+    checkedInAt: new Date().toISOString(),
+    channel: 'walkin',
+    note: 'บันทึกยอดขายหน้างานโดย Admin'
+  });
+
+  closeWalkinPosModal();
+  await refreshAdminPortal();
+}
+
+/**
+ * โมดูลที่ 7: ส่งออกไฟล์ Excel (CSV รองรับภาษาไทย UTF-8 BOM) & พิมพ์ใบลงทะเบียนหน้างาน A4
+ */
+function exportBookingsToCsv() {
+  const rows = getFilteredAdminBookings();
+  const headers = [
+    'รหัสจอง',
+    'ประเภทกิจกรรม',
+    'วันที่เข้าร่วม',
+    'ชื่อลูกค้า',
+    'เบอร์โทรศัพท์',
+    'จำนวน(โคม/ใบ)',
+    'จำนวนผู้เข้าร่วม(ท่าน)',
+    'ยอดชำระ(บาท)',
+    'ช่องทาง',
+    'สถานะสลิป',
+    'สถานะเช็คอินหน้างาน',
+    'หมายเหตุ',
+    'เวลาทำรายการ'
+  ];
+
+  const csvLines = [
+    headers.join(','),
+    ...rows.map(b => [
+      `"${b.id}"`,
+      `"${b.category === 'lantern' ? 'โคมลอย 299฿' : 'มินิบอลลูน 100฿'}"`,
+      `"${DATE_THAI_LABELS[b.eventDate] || b.eventDate}"`,
+      `"${String(b.customerName || '').replace(/"/g, '""')}"`,
+      `"=""${b.phone}"""`,
+      b.quantity,
+      b.attendees,
+      b.totalAmount,
+      `"${b.channel === 'walkin' ? 'ขายหน้างาน' : 'จองออนไลน์'}"`,
+      `"${b.paymentStatus}"`,
+      `"${b.checkedIn ? 'รับของแล้ว' : 'ยังไม่รับ'}"`,
+      `"${String(b.note || '').replace(/"/g, '""')}"`,
+      `"${b.createdAt}"`
+    ].join(','))
+  ];
+
+  // ใส่ UTF-8 BOM (\uFEFF) เพื่อให้เปิดใน Microsoft Excel แล้วภาษาไทยไม่เพี้ยน 100%
+  const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `Phrao-Festival-2569-Report-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+/**
+ * พิมพ์ใบรายชื่อผู้จองสำหรับวางโต๊ะลงทะเบียนเวลา 18.00 น. (มีช่องให้ลูกค้าเซ็นรับโคมลอย)
+ */
+function printRegistrationCheckinSheet() {
+  const rows = getFilteredAdminBookings();
+  const printArea = document.getElementById('printableAdminReportArea');
+
+  printArea.innerHTML = `
+    <div style="font-family: 'Sarabun', 'Prompt', sans-serif; color: #000;">
+      <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+        <h1 style="font-size: 18px; font-weight: bold; margin: 0;">ใบลงทะเบียนรับโคมลอยและบัตรเข้างาน — เทศกาลท่องเที่ยวเมืองพร้าว 2569</h1>
+        <p style="font-size: 12px; margin: 4px 0 0 0;">ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ • ลงทะเบียนเวลา 18.00 น. • ปล่อยโคมพร้อมกัน 20.00 น.</p>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <thead>
+          <tr style="background: #f1f5f9;">
+            <th style="border: 1px solid #000; padding: 6px;">ลำดับ</th>
+            <th style="border: 1px solid #000; padding: 6px;">รหัสจอง</th>
+            <th style="border: 1px solid #000; padding: 6px;">วันที่</th>
+            <th style="border: 1px solid #000; padding: 6px;">ชื่อผู้จอง</th>
+            <th style="border: 1px solid #000; padding: 6px;">เบอร์โทรศัพท์</th>
+            <th style="border: 1px solid #000; padding: 6px;">จำนวนที่ได้รับ</th>
+            <th style="border: 1px solid #000; padding: 6px;">ยอดเงิน</th>
+            <th style="border: 1px solid #000; padding: 6px; width: 130px;">ลายมือชื่อผู้รับของ (18.00 น.)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((b, idx) => `
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; text-align: center;">${idx + 1}</td>
+              <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">${b.id}</td>
+              <td style="border: 1px solid #000; padding: 6px;">${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</td>
+              <td style="border: 1px solid #000; padding: 6px;">${escapeHtml(b.customerName)}</td>
+              <td style="border: 1px solid #000; padding: 6px;">${escapeHtml(b.phone)}</td>
+              <td style="border: 1px solid #000; padding: 6px; font-weight: bold;">
+                ${b.quantity} ${b.category === 'lantern' ? 'โคม' : 'ใบ'} (${b.attendees} ท่าน)
+              </td>
+              <td style="border: 1px solid #000; padding: 6px; text-align: right;">${Number(b.totalAmount).toLocaleString()}฿</td>
+              <td style="border: 1px solid #000; padding: 6px; text-align: center;">${b.checkedIn ? '✓ รับแล้ว' : ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="margin-top: 16px; display: flex; justify-content: space-between; font-size: 10px; color: #475569;">
+        <span>จำนวนรายการทั้งหมด: ${rows.length} รายการ</span>
+        <span>ผู้พัฒนาระบบ: S.Y. Interactive Development Limited</span>
+      </div>
+    </div>
+  `;
+
+  window.print();
+}
+
+/**
+ * พิมพ์ใบสรุปรายงานผู้บริหาร (A4 Executive Summary Report)
+ */
+function printExecutiveSummarySheet() {
+  const active = APP_STATE.bookings.filter(b => b.paymentStatus !== 'rejected');
+  const totalRev = active.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+  const printArea = document.getElementById('printableAdminReportArea');
+
+  const summaryByGroup = [
+    { label: 'พรีออเดอร์โคมลอย อังคารที่ 24 พ.ย. 2569 (299฿/2ท่าน)', cat: 'lantern', dt: '2026-11-24', unit: 'โคม' },
+    { label: 'พรีออเดอร์โคมลอย พุธที่ 25 พ.ย. 2569 (299฿/2ท่าน)', cat: 'lantern', dt: '2026-11-25', unit: 'โคม' },
+    { label: 'บัตรชมมินิบอลลูน ศุกร์ที่ 20 พ.ย. 2569 (100฿/ท่าน)', cat: 'balloon', dt: '2026-11-20', unit: 'ใบ' },
+    { label: 'บัตรชมมินิบอลลูน เสาร์ที่ 21 พ.ย. 2569 (100฿/ท่าน)', cat: 'balloon', dt: '2026-11-21', unit: 'ใบ' }
+  ];
+
+  printArea.innerHTML = `
+    <div style="font-family: 'Sarabun', 'Prompt', sans-serif; color: #000;">
+      <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px;">
+        <h1 style="font-size: 20px; font-weight: bold; margin: 0;">รายงานสรุปยอดจำหน่ายบัตรและพรีออเดอร์โคมลอย</h1>
+        <p style="font-size: 13px; margin: 4px 0 0 0;">เทศกาลท่องเที่ยวเมืองพร้าว 2569 • ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</p>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
+        <thead>
+          <tr style="background: #f1f5f9;">
+            <th style="border: 1px solid #000; padding: 8px; text-align: left;">กิจกรรมและวันที่</th>
+            <th style="border: 1px solid #000; padding: 8px; text-align: center;">จำนวนโคม / บัตร</th>
+            <th style="border: 1px solid #000; padding: 8px; text-align: center;">จำนวนผู้เข้าร่วม (ท่าน)</th>
+            <th style="border: 1px solid #000; padding: 8px; text-align: right;">ยอดรายได้รวม (บาท)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${summaryByGroup.map(g => {
+            const list = active.filter(b => b.category === g.cat && b.eventDate === g.dt);
+            const qty = list.reduce((s, b) => s + Number(b.quantity || 0), 0);
+            const att = list.reduce((s, b) => s + Number(b.attendees || 0), 0);
+            const rev = list.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
+            return `
+              <tr>
+                <td style="border: 1px solid #000; padding: 8px; font-weight: bold;">${g.label}</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">${qty.toLocaleString()} ${g.unit}</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: center;">${att.toLocaleString()} ท่าน</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">${rev.toLocaleString()} บาท</td>
+              </tr>
+            `;
+          }).join('')}
+          <tr style="background: #fef3c7; font-weight: bold; font-size: 14px;">
+            <td colspan="3" style="border: 1px solid #000; padding: 10px; text-align: right;">รวมรายได้สุทธิทั้งเทศกาล</td>
+            <td style="border: 1px solid #000; padding: 10px; text-align: right;">${totalRev.toLocaleString()} บาท</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 24px; display: flex; justify-content: space-between; font-size: 11px;">
+        <span>วันที่พิมพ์รายงาน: ${new Date().toLocaleString('th-TH')}</span>
+        <span>ผู้พัฒนาระบบ: S.Y. Interactive Development Limited</span>
+      </div>
+    </div>
+  `;
+
+  window.print();
+}
+
+/**
+ * โมดูลที่ 8: ตั้งค่าโควตา เปิด-ปิดรับจอง และสำรองข้อมูล JSON
+ */
+function openAdminSettingsModal() {
+  document.getElementById('settingQuota24').value = APP_STATE.settings.quota_2026_11_24 || 200;
+  document.getElementById('settingQuota25').value = APP_STATE.settings.quota_2026_11_25 || 200;
+  document.getElementById('settingOpen24').checked = APP_STATE.settings.open_2026_11_24 !== false;
+  document.getElementById('settingOpen25').checked = APP_STATE.settings.open_2026_11_25 !== false;
+  document.getElementById('settingNewAdminPass').value = '';
+
+  const modal = document.getElementById('adminSettingsModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeAdminSettingsModal() {
+  const modal = document.getElementById('adminSettingsModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function submitAdminSettings(event) {
+  event.preventDefault();
+  const nextSettings = {
+    ...APP_STATE.settings,
+    quota_2026_11_24: Math.max(1, parseInt(document.getElementById('settingQuota24').value, 10) || 200),
+    quota_2026_11_25: Math.max(1, parseInt(document.getElementById('settingQuota25').value, 10) || 200),
+    open_2026_11_24: document.getElementById('settingOpen24').checked,
+    open_2026_11_25: document.getElementById('settingOpen25').checked
+  };
+
+  const newPass = document.getElementById('settingNewAdminPass').value.trim();
+  if (newPass) {
+    const creds = getAdminCredentials();
+    localStorage.setItem(STORAGE_KEYS.ADMIN_CREDS, JSON.stringify({ ...creds, password: newPass }));
+  }
+
+  APP_STATE.settings = await saveFestivalSettings(nextSettings);
+  updateCustomerQuotaBadges();
+  renderAdminKpiAndInventory();
+  closeAdminSettingsModal();
+}
+
+function downloadJsonBackup() {
+  const backupData = {
+    exportedAt: new Date().toISOString(),
+    developer: 'S.Y. Interactive Development Limited',
+    settings: APP_STATE.settings,
+    bookings: APP_STATE.bookings
+  };
+  const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `Phrao-Festival-Backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
