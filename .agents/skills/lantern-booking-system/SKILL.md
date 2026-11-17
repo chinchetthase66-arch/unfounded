@@ -27,7 +27,7 @@ Use this skill when building, updating, or verifying the customer-facing booking
    - `totalAmount = quantity * 100` and `attendees = quantity` (for online Mini Balloon tickets on 20–21 Nov 2569)
 
 3. **Payment & Slip Handling:**
-   - Display `./QR Code.jpg` clearly along with account name **น.ส.กนกพิชญ์ ชัยชมภู** (Krungthai PromptPay).
+   - Display `./QR Code.jpg` clearly along with account name **น.ส.กนกพิชญ์ ชัยชมภู** and PromptPay **0647328284** (matches the QR).
    - Provide a button to download `./QR Code.jpg` so mobile users can import it into their banking app.
    - Compress uploaded slip images via HTML5 `<canvas>` (max dimension ~880px) to **WebP** when supported, else JPEG `0.78`, before storing so Supabase/local cache stays small.
    - Slip verification priority: (1) Thai bank slip QR + anti-duplicate, (2) optional amount from EMV Tag 54, (3) admin visual checklist — **do not rely on OCR as the primary gate**.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>พรีออเดอร์ปล่อยโคมลอย & บัตรชมมินิบอลลูน — เทศกาลท่องเที่ยวเมืองพร้าว 2569 ณ โฮงชาฮักมี</title>
+  <title>จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท — เทศกาลท่องเที่ยวเมืองพร้าว 2569</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -153,10 +153,37 @@
       display: block;
       width: 100%;
       height: auto;
-      max-height: min(78vh, 820px);
+      max-height: none;
       object-fit: contain;
       object-position: center top;
       background: #0a1016;
+      image-rendering: auto;
+    }
+    .hero-bleed--paper {
+      background: var(--paper);
+      padding: 0.75rem 0 0;
+    }
+    .hero-bleed--paper .hero-bleed__frame {
+      background: #fff;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      box-shadow: var(--shadow-river);
+      border: 1px solid rgba(26, 20, 16, 0.08);
+    }
+    .hero-bleed--paper .hero-bleed__img {
+      background: #fff;
+      max-height: none;
+    }
+    .hero-bleed--paper .hero-action {
+      padding: 1rem 1.25rem 1.25rem;
+    }
+    .hero-bleed--paper .hero-action__copy {
+      color: rgba(26, 20, 16, 0.82);
+      max-width: 42ch;
+      font-size: 1rem;
+    }
+    .hero-bleed--paper .hero-action__copy strong {
+      color: var(--forest);
     }
     .hero-action {
       display: flex;
@@ -364,7 +391,15 @@
       text-align: center;
       border: 1px solid rgba(26, 20, 16, 0.12);
     }
-    .qr-frame img { max-width: 16rem; width: 100%; height: auto; }
+    .qr-frame img {
+      display: block;
+      max-width: 18rem;
+      width: 100%;
+      height: auto;
+      margin-left: auto;
+      margin-right: auto;
+      image-rendering: -webkit-optimize-contrast;
+    }
     .btn-secondary {
       display: block;
       text-align: center;
@@ -424,21 +459,114 @@
       padding: 1.25rem;
       margin-bottom: 1.5rem;
     }
-    .gallery-grid {
+    .program-grid {
       display: grid;
       gap: 1rem;
       grid-template-columns: 1fr;
+      margin-bottom: 1.5rem;
     }
-    @media (min-width: 640px) { .gallery-grid { grid-template-columns: 1fr 1fr; } }
-    @media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
-    .gallery-item {
+    @media (min-width: 768px) {
+      .program-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .program-card {
       border-radius: var(--radius-card);
       overflow: hidden;
-      background: var(--night-soft);
-      border: 1px solid rgba(47, 74, 58, 0.35);
+      background: #fff;
+      border: 1px solid rgba(47, 74, 58, 0.22);
+      box-shadow: var(--shadow-river);
+      color: var(--ink);
     }
-    .gallery-item img { width: 100%; height: 11rem; object-fit: cover; display: block; }
-    .gallery-item figcaption { padding: 0.65rem 0.75rem; font-size: 0.78rem; color: var(--mist); }
+    .program-card__media {
+      background: #fff;
+      overflow: hidden;
+      padding: 0.5rem;
+    }
+    .program-card__media img {
+      width: 100%;
+      height: auto;
+      max-height: 22rem;
+      object-fit: contain;
+      object-position: center top;
+      display: block;
+      margin: 0 auto;
+    }
+    .program-card__body { padding: 1rem 1.1rem 1.15rem; }
+    .program-card__body h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1.05rem;
+      color: var(--forest);
+      font-weight: 700;
+    }
+    .program-card__body p {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: rgba(26, 20, 16, 0.78);
+    }
+
+    .balloon-showcase {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr;
+      margin-bottom: 1.75rem;
+    }
+    @media (min-width: 640px) {
+      .balloon-showcase { grid-template-columns: 1fr 1fr; }
+    }
+    .balloon-showcase figure {
+      margin: 0;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(47, 74, 58, 0.18);
+      box-shadow: var(--shadow-river);
+    }
+    .balloon-showcase img {
+      width: 100%;
+      height: auto;
+      max-height: 28rem;
+      object-fit: contain;
+      object-position: center;
+      background: linear-gradient(165deg, #fdf8ef 0%, #eef5f0 55%, #e4ebe6 100%);
+      display: block;
+      padding: 0.75rem;
+    }
+    .balloon-showcase figcaption {
+      padding: 0.65rem 0.85rem 0.85rem;
+      font-size: 0.84rem;
+      line-height: 1.4;
+      color: rgba(26, 20, 16, 0.78);
+      text-align: center;
+      font-weight: 600;
+    }
+    .pay-account {
+      margin-top: 0.65rem;
+      text-align: left;
+      background: rgba(47, 74, 58, 0.06);
+      border: 1px solid rgba(47, 74, 58, 0.18);
+      border-radius: 12px;
+      padding: 0.65rem 0.75rem;
+    }
+    .pay-account p { margin: 0; font-size: 0.86rem; color: var(--ink); line-height: 1.45; }
+    .pay-account strong { font-weight: 700; }
+    .pay-account__pp {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      margin-top: 0.4rem;
+    }
+    .pay-account__pp code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--forest);
+      background: #fff;
+      border: 1px solid rgba(47, 74, 58, 0.25);
+      border-radius: 8px;
+      padding: 0.2rem 0.5rem;
+    }
 
     .lookup-panel {
       max-width: 40rem;
@@ -557,13 +685,12 @@
 
   <header class="site-header no-print">
     <div class="site-header__inner">
-      <div class="brand-lockup" onclick="switchMainTab('lantern')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')switchMainTab('lantern')">
+      <div class="brand-lockup" onclick="switchMainTab('balloon')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')switchMainTab('balloon')">
         <h1 class="brand-lockup__title font-display">เทศกาลท่องเที่ยวเมืองพร้าว 2569</h1>
-        <p class="brand-lockup__meta">ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ · โทร. 081-669-6653 (คุณฝ้าย)</p>
+        <p class="brand-lockup__meta">จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท · ณ โฮงชาฮักมี · โทร. 081-669-6653 (คุณฝ้าย)</p>
       </div>
       <nav class="site-nav" aria-label="เมนูหลัก">
-        <button type="button" id="navBtn-lantern" onclick="switchMainTab('lantern')" class="nav-btn nav-active">จองโคมลอย 24–25 พ.ย.</button>
-        <button type="button" id="navBtn-balloon" onclick="switchMainTab('balloon')" class="nav-btn nav-idle">บัตรมินิบอลลูน 20–21 พ.ย.</button>
+        <button type="button" id="navBtn-balloon" onclick="switchMainTab('balloon')" class="nav-btn nav-active">บัตรมินิบอลลูน 20–21 พ.ย.</button>
         <button type="button" id="navBtn-lookup" onclick="switchMainTab('lookup')" class="nav-btn nav-idle">ค้นหาบัตร</button>
         <button type="button" id="navBtn-admin" onclick="handleAdminNavClick()" class="nav-btn nav-admin">แอดมิน</button>
       </nav>
@@ -573,193 +700,53 @@
   <main class="site-main no-print">
 
     <!-- =================================================================== -->
-    <!-- TAB 1: พรีออเดอร์ปล่อยโคมลอย (24-25 พฤศจิกายน 2569) -->
+    <!-- จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท (20-21 พฤศจิกายน 2569) -->
     <!-- =================================================================== -->
-    <section id="tabSection-lantern">
-      <div class="hero-bleed" aria-label="โปสเตอร์พรีออเดอร์ปล่อยโคมลอย">
+    <section id="tabSection-balloon" class="forest-zone" style="padding-top:0.25rem;">
+      <div class="hero-bleed hero-bleed--paper" aria-label="จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท">
         <div class="hero-bleed__frame">
-          <img class="hero-bleed__img" src="./387004.jpg" alt="พรีออเดอร์ปล่อยโคมลอย เทศกาลท่องเที่ยวเมืองพร้าว 24–25 พฤศจิกายน 2569 โคมละ 299 บาท ต่อ 2 ท่าน ณ โฮงชาฮักมี" width="1920" height="1080" />
+          <img class="hero-bleed__img" src="./387141.jpg" alt="จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท เทศกาลท่องเที่ยวเมืองพร้าว" width="1600" height="900" decoding="async" />
         </div>
         <div class="hero-action">
-          <p class="hero-action__copy">จองออนไลน์ได้ทันที ไม่ต้องสมัครสมาชิก · <strong>โคมละ 299 บาท / 2 ท่าน</strong></p>
-          <button type="button" class="btn-cta" onclick="document.getElementById('lanternBookingFormCard').scrollIntoView({behavior:'smooth',block:'start'})">เริ่มจองโคมลอย</button>
+          <p class="hero-action__copy"><strong>จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท</strong> · วันที่ 20–21 พฤศจิกายน 2569 · เวลา 18.00–20.00 น. · ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</p>
+          <button type="button" class="btn-cta" style="background:var(--forest);color:var(--paper);" onclick="document.getElementById('balloonBookingFormCard').scrollIntoView({behavior:'smooth',block:'start'})">ซื้อบัตรออนไลน์</button>
         </div>
       </div>
 
-      <div class="lantern-details">
-        <article class="detail-panel">
-          <h2>ราคาพรีออเดอร์</h2>
-          <p class="price-line"><em>โคมละ 299 บาท</em> / 2 ท่าน</p>
-          <p style="font-size:0.82rem;color:rgba(217,224,214,0.8);margin:0.35rem 0 0;">1 โคม สำหรับผู้เข้าร่วม 2 ท่าน</p>
-        </article>
-        <article class="detail-panel">
-          <h2>กำหนดการ (24–25 พ.ย. 2569)</h2>
-          <p class="schedule-line">ลงทะเบียนรับโคม <strong style="color:var(--candle)">18.00 น.</strong></p>
-          <p class="schedule-line">ปล่อยโคมลอยพร้อมกัน <strong style="color:var(--candle)">20.00 น.</strong></p>
-          <p class="contact-line" style="font-size:0.85rem;margin-top:0.5rem;">สอบถาม <a href="tel:0816696653">081-669-6653 (คุณฝ้าย)</a></p>
-        </article>
-        <article class="detail-panel" style="grid-column:1/-1;">
-          <h2>สิ่งที่ได้รับในชุดโคมลอย (6 รายการ)</h2>
-          <ul class="inclusion-list" style="grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));">
-            <li>1. โคมลอยไซส์ XL</li>
-            <li>2. ไฟแช็ค</li>
-            <li>3. เทียน</li>
-            <li>4. ปากกา</li>
-            <li>5. เครื่องดื่ม</li>
-            <li>6. ของที่ระลึก</li>
-          </ul>
-        </article>
+      <div class="balloon-event-facts" style="background:var(--paper);color:var(--ink);border-radius:var(--radius-card);padding:1.15rem 1.25rem;margin-bottom:1.5rem;border:1px solid rgba(47,74,58,0.22);box-shadow:var(--shadow-river);">
+        <h2 class="form-title" style="color:var(--forest);margin:0 0 0.5rem;font-size:1.15rem;">จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท</h2>
+        <p style="margin:0;font-size:0.95rem;line-height:1.55;">เทศกาลท่องเที่ยวเมืองพร้าว<br />วันที่ 20–21 พฤศจิกายน 2569 · เวลา 18.00 – 20.00 น.<br />ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</p>
       </div>
 
-      <div id="lanternBookingFormCard" class="paper-surface">
-        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.75rem;align-items:flex-start;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid rgba(26,20,16,0.12);">
-          <div>
-            <h2 class="form-title">แบบฟอร์มสั่งจองโคมลอยออนไลน์</h2>
-            <p class="form-sub">299 บาทต่อโคม (2 ท่าน) · กรอกข้อมูล สแกน QR พร้อมเพย์ แนบสลิป รับ E-Ticket ทันที</p>
-          </div>
-          <span id="cloudStatusBadge" class="cloud-status">เชื่อมต่อฐานข้อมูลออนไลน์พร้อมใช้งาน</span>
-        </div>
-
-        <form id="lanternBookingForm" onsubmit="submitCustomerBooking(event, 'lantern')" style="display:grid;gap:2rem;" class="lg:grid lg:grid-cols-12 lg:gap-8">
-          <!-- คอลัมน์ซ้าย: ขั้นตอนที่ 1 และ 2 (เลือกวัน จำนวน และข้อมูลผู้จอง) -->
-          <div class="lg:col-span-7" style="display:flex;flex-direction:column;gap:1.5rem;">
-            <div>
-              <label class="field-label">ขั้นตอนที่ 1: เลือกวันปล่อยโคมลอย <span style="color:var(--lotus)">*</span></label>
-              <div style="display:grid;gap:0.75rem;" class="sm:grid sm:grid-cols-2">
-                <button type="button" id="lanternDateBtn-2026-11-24" onclick="selectLanternDate('2026-11-24')" class="date-btn date-active">
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-                    <span style="font-size:0.72rem;font-weight:700;color:var(--ember);">คืนที่ 1</span>
-                    <span id="quotaBadge-2026-11-24" class="quota-badge quota-badge--open">ว่างพร้อมจอง</span>
-                  </div>
-                  <p style="font-size:1.05rem;font-weight:700;margin:0.35rem 0 0;">อังคารที่ 24 พ.ย. 2569</p>
-                  <p style="font-size:0.78rem;margin:0.25rem 0 0;color:rgba(26,20,16,0.65);">ลงทะเบียน 18.00 น. · ปล่อยโคม 20.00 น.</p>
-                </button>
-                <button type="button" id="lanternDateBtn-2026-11-25" onclick="selectLanternDate('2026-11-25')" class="date-btn date-idle">
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-                    <span style="font-size:0.72rem;font-weight:700;color:rgba(26,20,16,0.55);">คืนที่ 2</span>
-                    <span id="quotaBadge-2026-11-25" class="quota-badge quota-badge--open">ว่างพร้อมจอง</span>
-                  </div>
-                  <p style="font-size:1.05rem;font-weight:700;margin:0.35rem 0 0;">พุธที่ 25 พ.ย. 2569</p>
-                  <p style="font-size:0.78rem;margin:0.25rem 0 0;color:rgba(26,20,16,0.65);">ลงทะเบียน 18.00 น. · ปล่อยโคม 20.00 น.</p>
-                </button>
-              </div>
-              <input type="hidden" id="lanternSelectedDate" value="2026-11-24" />
-            </div>
-
-            <div class="qty-box">
-              <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.75rem;align-items:center;">
-                <div>
-                  <label class="field-label" style="margin:0;">จำนวนโคมลอย <span style="color:var(--lotus)">*</span></label>
-                  <p style="font-size:0.8rem;color:rgba(26,20,16,0.65);margin:0.2rem 0 0;">โคมละ 299 บาท (2 ท่านต่อโคม)</p>
-                </div>
-                <div style="display:flex;align-items:center;gap:0.65rem;">
-                  <button type="button" class="qty-btn qty-btn--minus" onclick="adjustLanternQty(-1)" aria-label="ลดจำนวน">−</button>
-                  <input id="lanternQtyInput" type="number" min="1" max="50" value="1" oninput="onLanternQtyInput()" class="paper-input" style="width:4.5rem;text-align:center;font-weight:700;" />
-                  <button type="button" class="qty-btn qty-btn--plus" onclick="adjustLanternQty(1)" aria-label="เพิ่มจำนวน">+</button>
-                </div>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.5rem;margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid rgba(26,20,16,0.1);font-size:0.9rem;">
-                <span>สิทธิ์เข้างาน: <strong id="lanternCalcAttendees">1 โคม (สำหรับ 2 ท่าน)</strong></span>
-                <span style="font-weight:700;color:var(--ember);">ยอดรวม <span id="lanternCalcTotal">299</span> บาท</span>
-              </div>
-            </div>
-
-            <div>
-              <p class="field-label">ขั้นตอนที่ 2: ข้อมูลผู้จอง</p>
-              <div style="display:grid;gap:1rem;" class="sm:grid sm:grid-cols-2">
-                <div>
-                  <label class="field-label" for="lanternCustomerName">ชื่อ-นามสกุล (หรือชื่อเล่น) <span style="color:var(--lotus)">*</span></label>
-                  <input id="lanternCustomerName" type="text" required placeholder="เช่น คุณสมชาย ใจดี" class="paper-input" />
-                </div>
-                <div>
-                  <label class="field-label" for="lanternCustomerPhone">เบอร์โทรศัพท์ <span style="color:var(--lotus)">*</span></label>
-                  <input id="lanternCustomerPhone" type="tel" required placeholder="0812345678" class="paper-input" inputmode="numeric" />
-                </div>
-              </div>
-              <div style="margin-top:1rem;">
-                <label class="field-label" for="lanternCustomerNote">หมายเหตุ (ถ้ามี)</label>
-                <input id="lanternCustomerNote" type="text" placeholder="เช่น มาเป็นครอบครัว" class="paper-input" />
-              </div>
-            </div>
-          </div>
-
-          <div class="lg:col-span-5 pay-column" style="display:flex;flex-direction:column;gap:1rem;">
-            <p class="field-label" style="margin:0;">ขั้นตอนที่ 3: ชำระเงินและแนบสลิป (PromptPay)</p>
-            <div class="qr-frame">
-              <img src="./QR Code.jpg" alt="QR Code ชำระเงิน น.ส.กนกพิชญ์ ชัยชมภู" />
-              <p style="font-size:0.75rem;color:rgba(26,20,16,0.6);margin:0.5rem 0 0;">Thai QR Payment · ธนาคารกรุงไทย</p>
-              <p style="font-size:0.95rem;font-weight:700;margin:0.35rem 0 0;">ชื่อบัญชี: น.ส.กนกพิชญ์ ชัยชมภู</p>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-              <a href="./QR Code.jpg" download="QR-Code-Phrao-Festival.jpg" class="btn-secondary">บันทึกรูป QR</a>
-              <button type="button" class="btn-secondary" onclick="copyCurrentAmount('lantern')">คัดลอกยอด <span id="lanternCopyBtnAmount">299</span> บาท</button>
-            </div>
-            <div>
-              <label class="field-label" for="lanternSlipInput">แนบรูปสลิปโอนเงิน <span style="color:var(--lotus)">*</span></label>
-              <input id="lanternSlipInput" type="file" accept="image/*" required onchange="previewBookingSlip(event, 'lantern')" class="file-input" />
-              <div id="lanternSlipPreviewWrap" class="hidden" style="margin-top:0.5rem;text-align:center;">
-                <img id="lanternSlipPreviewImg" src="" alt="ตัวอย่างสลิปโอนเงิน" style="max-height:10rem;border-radius:10px;" />
-                <div id="lanternSlipQrStatus" class="slip-status slip-status--info" style="margin-top:0.35rem;">แนบรูปสลิปเรียบร้อยแล้ว</div>
-              </div>
-            </div>
-            <div id="lanternFormError" class="hidden form-error"></div>
-            <button id="lanternSubmitBtn" type="submit" class="btn-submit-lantern">ยืนยันการจองโคมลอยและรับ E-Ticket</button>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- TAB 2: จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท (20-21 พฤศจิกายน 2569) -->
-    <!-- =================================================================== -->
-    <section id="tabSection-balloon" class="hidden forest-zone" style="padding-top:0.25rem;">
-      <div class="hero-bleed" aria-label="โปสเตอร์ค่าบริการเข้าชมมินิบอลลูน คนละ 100 บาท">
-        <div class="hero-bleed__frame">
-          <img class="hero-bleed__img" src="./387141.jpg" alt="ค่าบริการเข้าชม คนละ 100 บาท PHRAO TOURISM FESTIVAL 2026 ณ โฮงชาฮักมี" width="1920" height="1080" />
-        </div>
-        <div class="hero-action">
-          <p class="hero-action__copy">ชมมินิบอลลูน 20–21 พ.ย. 2569 เวลา 18.00–20.00 น. · <strong>คนละ 100 บาท</strong></p>
-          <button type="button" class="btn-cta" style="background:var(--forest);color:var(--paper);" onclick="document.getElementById('balloonBookingForm').scrollIntoView({behavior:'smooth',block:'start'})">ซื้อบัตรออนไลน์</button>
-        </div>
-      </div>
-
-      <div class="gallery-grid" style="margin-bottom:1.5rem;">
-        <figure class="gallery-item">
-          <img src="./384856_0.jpg" alt="วันศุกร์ที่ 20 พฤศจิกายน 2569 ชมมินิบอลลูน" />
-          <figcaption><strong style="color:#b8d4c4;">ศุกร์ 20 พ.ย. 2569</strong> — ชมมินิบอลลูน ดนตรีวงทุลักทุเล สินค้าชุมชน ล่องเรือชมต้นฉำฉา เดินป่าโมอาย</figcaption>
+      <div class="balloon-showcase" aria-label="ภาพมินิบอลลูน">
+        <figure>
+          <img src="./บอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง.png" alt="มินิบอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง" loading="lazy" decoding="async" />
+          <figcaption>มินิบอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง</figcaption>
         </figure>
-        <figure class="gallery-item">
-          <img src="./384855_0.jpg" alt="วันเสาร์ที่ 21 พฤศจิกายน 2569" />
-          <figcaption><strong style="color:var(--candle);">เสาร์ 21 พ.ย. 2569</strong> — พิธีเปิด Chef's Table การแสดง รร.แม่ปั๋ง กลองสะบัดชัย ฟ้อนรำ</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="./บอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง.png" alt="มินิบอลลูนตาหมากรุกเหนือทุ่งยามอาทิตย์อัสดง" />
-          <figcaption>มินิบอลลูนยามอาทิตย์อัสดงเหนือทุ่งนา</figcaption>
-        </figure>
-        <figure class="gallery-item">
-          <img src="./บอลลูนวัวยักษ์เหนือนาทุ่ง.png" alt="บอลลูนวัวยักษ์เหนือนาทุ่ง" />
-          <figcaption>บัตรชมคนละ 100 บาท — จองออนไลน์หรือตั๋วรถหน้างาน</figcaption>
+        <figure>
+          <img src="./บอลลูนวัวยักษ์เหนือนาทุ่ง.png" alt="บอลลูนวัวยักษ์เหนือนาทุ่ง" loading="lazy" decoding="async" />
+          <figcaption>บอลลูนวัวยักษ์เหนือนาทุ่ง</figcaption>
         </figure>
       </div>
 
-      <div class="paper-surface" style="margin-top:1.5rem;">
+      <div id="balloonBookingFormCard" class="paper-surface">
         <h3 class="form-title" style="color:var(--forest);">ซื้อบัตรชมมินิบอลลูนออนไลน์</h3>
-        <p class="form-sub">คนละ 100 บาท · เวลา 18.00–20.00 น.</p>
+        <p class="form-sub">คนละ 100 บาท · วันที่ 20–21 พฤศจิกายน 2569 · เวลา 18.00–20.00 น. · ณ โฮงชาฮักมี · โอนพร้อมเพย์ 0647328284</p>
 
         <form id="balloonBookingForm" onsubmit="submitCustomerBooking(event, 'balloon')" style="display:grid;gap:2rem;margin-top:1rem;" class="lg:grid lg:grid-cols-12 lg:gap-8">
           <div class="lg:col-span-7" style="display:flex;flex-direction:column;gap:1.25rem;">
             <div>
-              <label class="field-label">เลือกวันเข้าชม <span style="color:var(--lotus)">*</span></label>
+              <label class="field-label">เลือกวันเข้าชมมินิบอลลูน <span style="color:var(--lotus)">*</span></label>
               <div style="display:grid;gap:0.75rem;" class="sm:grid sm:grid-cols-2">
                 <button type="button" id="balloonDateBtn-2026-11-20" onclick="selectBalloonDate('2026-11-20')" class="date-btn date-active date-active--balloon">
                   <span style="font-size:0.72rem;font-weight:700;color:var(--forest);">วันแรก</span>
                   <p style="font-size:1.02rem;font-weight:700;margin:0.35rem 0 0;">ศุกร์ 20 พ.ย. 2569</p>
-                  <p style="font-size:0.78rem;margin:0.25rem 0 0;color:rgba(26,20,16,0.65);">ชมมินิบอลลูนและดนตรีวงทุลักทุเล</p>
+                  <p style="font-size:0.78rem;margin:0.25rem 0 0;color:rgba(26,20,16,0.65);">ชมมินิบอลลูน · 18.00–20.00 น.</p>
                 </button>
                 <button type="button" id="balloonDateBtn-2026-11-21" onclick="selectBalloonDate('2026-11-21')" class="date-btn date-idle date-idle--balloon">
                   <span style="font-size:0.72rem;font-weight:700;color:rgba(26,20,16,0.55);">วันที่สอง</span>
                   <p style="font-size:1.02rem;font-weight:700;margin:0.35rem 0 0;">เสาร์ 21 พ.ย. 2569</p>
-                  <p style="font-size:0.78rem;margin:0.25rem 0 0;color:rgba(26,20,16,0.65);">พิธีเปิดและ Chef's Table อาหารล้านนา</p>
+                  <p style="font-size:0.78rem;margin:0.25rem 0 0;color:rgba(26,20,16,0.65);">ชมมินิบอลลูน · 18.00–20.00 น.</p>
                 </button>
               </div>
               <input type="hidden" id="balloonSelectedDate" value="2026-11-20" />
@@ -802,8 +789,20 @@
           <div class="lg:col-span-5 pay-column">
             <p class="field-label">ชำระเงินและแนบสลิป</p>
             <div class="qr-frame">
-              <img src="./QR Code.jpg" alt="QR Code น.ส.กนกพิชญ์ ชัยชมภู" />
-              <p style="font-weight:700;margin:0.5rem 0 0;font-size:0.92rem;">ชื่อบัญชี: น.ส.กนกพิชญ์ ชัยชมภู</p>
+              <img src="./QR%20Code.jpg" alt="QR Code พร้อมเพย์ 0647328284 น.ส.กนกพิชญ์ ชัยชมภู" />
+              <div class="pay-account">
+                <p><strong>ชื่อบัญชี:</strong> น.ส.กนกพิชญ์ ชัยชมภู</p>
+                <div class="pay-account__pp">
+                  <span>พร้อมเพย์</span>
+                  <code>0647328284</code>
+                  <button type="button" class="btn-secondary" style="min-height:2rem;padding:0.25rem 0.65rem;font-size:0.75rem;" onclick="copyPromptPayNumber()">คัดลอกเบอร์</button>
+                </div>
+                <p style="font-size:0.78rem;color:rgba(26,20,16,0.65);margin-top:0.4rem;">โอนเข้าบัญชีนี้ — ตรงกับ QR Code</p>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.65rem;">
+              <a href="./QR%20Code.jpg" download="QR-Code-Phrao-Festival.jpg" class="btn-secondary">บันทึกรูป QR</a>
+              <button type="button" class="btn-secondary" onclick="copyCurrentAmount('balloon')">คัดลอกยอด <span id="balloonCopyBtnAmount">200</span> บาท</button>
             </div>
             <label class="field-label" for="balloonSlipInput" style="margin-top:0.75rem;">แนบรูปสลิป <span style="color:var(--lotus)">*</span></label>
             <input id="balloonSlipInput" type="file" accept="image/*" required onchange="previewBookingSlip(event, 'balloon')" class="file-input" />
@@ -839,14 +838,14 @@
     <section id="tabSection-admin" class="hidden admin-zone admin-stack">
       <div class="admin-panel" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;align-items:flex-start;">
         <div>
-          <p style="font-size:0.72rem;font-weight:600;color:rgba(217,224,214,0.65);margin:0;">Admin Backoffice — 8 โมดูล</p>
-          <h2 class="font-display" style="font-size:1.25rem;color:var(--candle);margin:0.35rem 0 0;">ศูนย์ควบคุมเทศกาลท่องเที่ยวเมืองพร้าว 2569</h2>
+          <p style="font-size:0.72rem;font-weight:600;color:rgba(217,224,214,0.65);margin:0;">Admin — บัตรชมมินิบอลลูน</p>
+          <h2 class="font-display" style="font-size:1.25rem;color:var(--candle);margin:0.35rem 0 0;">ศูนย์ควบคุมจำหน่ายบัตรชมมินิบอลลูน</h2>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:0.45rem;">
           <button type="button" onclick="refreshAdminPortal()" class="admin-btn admin-btn--quiet">รีเฟรช</button>
           <button type="button" onclick="openWalkinPosModal()" class="admin-btn admin-btn--forest">บันทึกขายหน้างาน</button>
-          <a href="./tickets.html" class="admin-btn admin-btn--primary" style="text-decoration:none;display:inline-flex;align-items:center;" title="สตูดิโอพิมพ์ตั๋วแมนนวลแบบตั๋วรถขายหน้างาน (Admin เท่านั้น)">บัตรชมมินิบอลลูน</a>
-          <button type="button" onclick="openAdminSettingsModal()" class="admin-btn admin-btn--quiet">ตั้งค่าโควตา</button>
+          <a href="./tickets.html" class="admin-btn admin-btn--primary" style="text-decoration:none;display:inline-flex;align-items:center;" title="สตูดิโอพิมพ์ตั๋วแมนนวลแบบตั๋วรถขายหน้างาน (Admin เท่านั้น)">พิมพ์ตั๋วมินิบอลลูน</a>
+          <button type="button" onclick="openAdminSettingsModal()" class="admin-btn admin-btn--quiet">ตั้งค่า</button>
           <button type="button" onclick="adminLogout()" class="admin-btn admin-btn--quiet" style="border-color:rgba(166,107,107,0.4);color:#e8c4c4;">ออกจากระบบ</button>
         </div>
       </div>
@@ -859,26 +858,25 @@
         <!-- ตารางคำนวณสิ่งของที่สตาฟต้องจัดเตรียมหน้างานอัตโนมัติ (Inventory Calculator) -->
         <div class="lg:col-span-7 admin-panel space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm md:text-base font-extrabold text-amber-400">
-              🎁 ตารางคำนวณสิ่งของที่สตาฟต้องจัดเตรียมหน้างาน (วันที่ 24–25 พ.ย. 2569)
+            <h3 class="text-sm md:text-base font-extrabold text-emerald-400">
+              สรุปยอดบัตรชมมินิบอลลูน (20–21 พ.ย. 2569)
             </h3>
-            <span class="text-[11px] text-slate-400">คำนวณอัตโนมัติจากยอดจองโคมลอย</span>
+            <span class="text-[11px] text-slate-400">คนละ 100 บาท · เวลา 18.00–20.00 น.</span>
           </div>
           <div id="adminInventoryTableWrap" class="overflow-x-auto"></div>
         </div>
 
-        <!-- โมดูลที่ 4: ระบบเช็คอินรับโคมหน้างาน เวลา 18.00 น. (ป้องกันการรับโคมซ้ำ) -->
         <div class="lg:col-span-5 admin-panel space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-sm md:text-base font-extrabold text-emerald-400">
-              📲 จุดลงทะเบียนเช็คอินหน้างาน 18.00 น. (Anti-Duplicate)
+              📲 เช็คอินหน้างาน 18.00 น. (Anti-Duplicate)
             </h3>
             <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30 font-bold">
-              ป้องกันรับโคมซ้ำ 100%
+              ป้องกันเช็คอินซ้ำ
             </span>
           </div>
           <p class="text-xs text-slate-400">
-            พิมพ์รหัสจอง (เช่น <code class="text-amber-300">KL24-0001</code>) หรือเบอร์โทร 4 ตัวท้ายของลูกค้าเพื่อตรวจสอบและกดยืนยันส่งมอบโคมลอย
+            พิมพ์รหัสจอง (เช่น <code class="text-amber-300">MB20-0001</code>) หรือเบอร์โทร 4 ตัวท้ายเพื่อยืนยันเข้าชมมินิบอลลูน
           </p>
           <div class="flex gap-2">
             <input id="quickCheckinInput" type="text" placeholder="รหัสจอง หรือ เบอร์โทรลูกค้า..."
@@ -899,9 +897,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <select id="adminFilterCategoryDate" onchange="renderAdminBookingsTable()"
               class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white">
-              <option value="all">📅 กิจกรรมและวันที่ทั้งหมด</option>
-              <option value="lantern_2026-11-24">🏮 โคมลอย อังคาร 24 พ.ย. 2569</option>
-              <option value="lantern_2026-11-25">🏮 โคมลอย พุธ 25 พ.ย. 2569</option>
+              <option value="all">📅 วันที่ทั้งหมด</option>
               <option value="balloon_2026-11-20">🎈 มินิบอลลูน ศุกร์ 20 พ.ย. 2569</option>
               <option value="balloon_2026-11-21">🎈 มินิบอลลูน เสาร์ 21 พ.ย. 2569</option>
             </select>
@@ -911,7 +907,7 @@
               <option value="all">📋 สถานะสลิปทั้งหมด</option>
               <option value="pending">⏳ รอตรวจสอบสลิป</option>
               <option value="approved">✅ อนุมัติสลิปแล้ว</option>
-              <option value="checkedin">🏮 เช็คอินรับของแล้ว</option>
+              <option value="checkedin">✅ เช็คอินแล้ว</option>
               <option value="not_checkedin">🕒 ยังไม่เช็คอินหน้างาน</option>
               <option value="rejected">❌ ยกเลิก/ปฏิเสธ</option>
             </select>
@@ -929,7 +925,7 @@
             </button>
             <button onclick="printRegistrationCheckinSheet()"
               class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold">
-              🖨️ พิมพ์ใบเซ็นชื่อรับโคมหน้างาน (A4)
+              🖨️ พิมพ์ใบเช็คอินหน้างาน (A4)
             </button>
             <button onclick="printExecutiveSummarySheet()"
               class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold">
@@ -1012,7 +1008,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">รหัสผ่าน (Password)</label>
-          <input id="adminPasswordInput" type="password" placeholder="รหัสเริ่มต้น: phrao2569" required
+          <input id="adminPasswordInput" type="password" placeholder="กรอกรหัสผ่าน" required autocomplete="current-password"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm" />
         </div>
         <div id="adminLoginError" class="hidden text-xs font-bold text-red-400 text-center"></div>
@@ -1056,14 +1052,12 @@
           <div>
             <label class="block text-slate-300 font-semibold mb-1">วันที่เข้าร่วม</label>
             <select id="editEventDate" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white">
-              <option value="2026-11-24">โคมลอย 24 พ.ย. 69</option>
-              <option value="2026-11-25">โคมลอย 25 พ.ย. 69</option>
               <option value="2026-11-20">มินิบอลลูน 20 พ.ย. 69</option>
               <option value="2026-11-21">มินิบอลลูน 21 พ.ย. 69</option>
             </select>
           </div>
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">จำนวน (โคม/ใบ)</label>
+            <label class="block text-slate-300 font-semibold mb-1">จำนวนใบบัตร</label>
             <input id="editQuantity" type="number" min="1" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
           </div>
         </div>
@@ -1092,13 +1086,11 @@
           <select id="walkinCategoryDate" onchange="updateWalkinPosCalc()" class="w-full px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold">
             <option value="balloon|2026-11-20">🎈 ขายตั๋วรถมินิบอลลูน ศุกร์ 20 พ.ย. 69 (ใบละ 100฿)</option>
             <option value="balloon|2026-11-21">🎈 ขายตั๋วรถมินิบอลลูน เสาร์ 21 พ.ย. 69 (ใบละ 100฿)</option>
-            <option value="lantern|2026-11-24">🏮 ขายโคมลอยหน้างาน อังคาร 24 พ.ย. 69 (โคมละ 299฿)</option>
-            <option value="lantern|2026-11-25">🏮 ขายโคมลอยหน้างาน พุธ 25 พ.ย. 69 (โคมละ 299฿)</option>
           </select>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">จำนวน (ใบ / โคม)</label>
+            <label class="block text-slate-300 font-semibold mb-1">จำนวนใบ</label>
             <input id="walkinQty" type="number" min="1" value="10" oninput="updateWalkinPosCalc()" required
               class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
           </div>
@@ -1131,32 +1123,12 @@
   <div id="adminSettingsModal" class="no-print modal-overlay hidden">
     <div class="modal-card modal-card--wide" style="font-size:0.78rem;">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-base font-extrabold text-amber-400">⚙️ ตั้งค่าโควตาโคมลอย & ระบบหลังบ้าน</h3>
+        <h3 class="text-base font-extrabold text-amber-400">⚙️ ตั้งค่าระบบหลังบ้าน</h3>
         <button onclick="closeAdminSettingsModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
       </div>
 
       <form onsubmit="submitAdminSettings(event)" class="space-y-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-slate-300 font-semibold mb-1">โควตาโคมลอย 24 พ.ย. 69 (โคม)</label>
-            <input id="settingQuota24" type="number" min="1" value="200" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
-          </div>
-          <div>
-            <label class="block text-slate-300 font-semibold mb-1">โควตาโคมลอย 25 พ.ย. 69 (โคม)</label>
-            <input id="settingQuota25" type="number" min="1" value="200" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-800 border border-slate-700 cursor-pointer">
-            <input id="settingOpen24" type="checkbox" checked class="w-4 h-4 accent-amber-500" />
-            <span class="font-bold text-white">เปิดรับจองโคม 24 พ.ย. 69</span>
-          </label>
-          <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-800 border border-slate-700 cursor-pointer">
-            <input id="settingOpen25" type="checkbox" checked class="w-4 h-4 accent-amber-500" />
-            <span class="font-bold text-white">เปิดรับจองโคม 25 พ.ย. 69</span>
-          </label>
-        </div>
+        <p class="text-slate-400 text-xs">ระบบปัจจุบันจำหน่ายเฉพาะบัตรชมมินิบอลลูน คนละ 100 บาท วันที่ 20–21 พฤศจิกายน 2569</p>
 
         <div class="border-t border-slate-800 pt-3">
           <label class="block text-slate-300 font-semibold mb-1">เปลี่ยนรหัสผ่าน Admin ใหม่ (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)</label>
