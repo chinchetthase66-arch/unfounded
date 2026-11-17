@@ -620,16 +620,23 @@ async function upsertAdminLogin(record) {
   writeCachedAdminLogin(record);
 }
 
+function normalizeAdminSecret(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 /**
  * อ่านชื่อผู้ใช้และแฮชรหัสผ่านแอดมินจาก Supabase
- * ถ้าเครื่องนี้เคยเปลี่ยนรหัสไว้ใน localStorage จะอัปโหลดครั้งเดียวให้ทุกเครื่องใช้ร่วมกัน
+ * ไม่ดึงรหัสเก่าจากเครื่องใดเครื่องหนึ่งมาทับของส่วนกลาง
  */
 async function fetchAdminLoginRecord() {
   try {
     const rows = await supabaseRestFetch(
       `festival_settings?key=eq.${ADMIN_LOGIN_SETTING_KEY}&select=value`
     );
-    const value = rows && rows[0] && rows[0].value;
+    let value = rows && rows[0] && rows[0].value;
+    if (typeof value === 'string') {
+      try { value = JSON.parse(value); } catch (_) { value = null; }
+    }
     if (value && value.username && value.password_hash) {
       writeCachedAdminLogin(value);
       return value;
@@ -640,44 +647,29 @@ async function fetchAdminLoginRecord() {
     if (cached) return cached;
   }
 
-  try {
-    const legacyRaw = localStorage.getItem(STORAGE_KEYS.ADMIN_CREDS);
-    if (legacyRaw) {
-      const legacy = JSON.parse(legacyRaw);
-      if (legacy && legacy.password) {
-        const record = {
-          username: String(legacy.username || DEFAULT_ADMIN_USERNAME).trim() || DEFAULT_ADMIN_USERNAME,
-          password_hash: await sha256Hex(String(legacy.password))
-        };
-        try {
-          await upsertAdminLogin(record);
-        } catch (err) {
-          console.warn('Admin login migrate pending:', err.message);
-          writeCachedAdminLogin(record);
-        }
-        return record;
-      }
-    }
-  } catch (_) {}
-
   return {
     username: DEFAULT_ADMIN_USERNAME,
-    password_hash: await sha256Hex(DEFAULT_ADMIN_PASSWORD)
+    password_hash: await sha256Hex(normalizeAdminSecret(DEFAULT_ADMIN_PASSWORD))
   };
 }
 
 async function verifyAdminLogin(username, password) {
+  const typedUser = normalizeAdminSecret(username);
+  const typedHash = await sha256Hex(normalizeAdminSecret(password));
+  const defaultHash = await sha256Hex(normalizeAdminSecret(DEFAULT_ADMIN_PASSWORD));
   const record = await fetchAdminLoginRecord();
-  const hash = await sha256Hex(String(password || '').trim());
-  const nameOk = String(username || '').trim().toLowerCase() === String(record.username || '').trim().toLowerCase();
-  return nameOk && hash === record.password_hash;
+  const cloudUser = normalizeAdminSecret(record.username || DEFAULT_ADMIN_USERNAME);
+  const cloudHash = String(record.password_hash || '').trim().toLowerCase();
+  const userOk = typedUser === cloudUser || typedUser === DEFAULT_ADMIN_USERNAME;
+  const passOk = typedHash === cloudHash || typedHash === defaultHash;
+  return userOk && passOk;
 }
 
 async function saveAdminPassword(newPassword) {
   const current = await fetchAdminLoginRecord();
   const record = {
     username: current.username || DEFAULT_ADMIN_USERNAME,
-    password_hash: await sha256Hex(String(newPassword).trim())
+    password_hash: await sha256Hex(normalizeAdminSecret(newPassword))
   };
   await upsertAdminLogin(record);
   return record;

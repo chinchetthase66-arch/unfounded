@@ -51,7 +51,7 @@
     .tickets-grid-2col {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 3.5mm;
+      gap: 2.2mm;
     }
 
     .tickets-grid-1col {
@@ -60,88 +60,282 @@
       gap: 4mm;
     }
 
-    /* ตัวตั๋วรถ 1 ใบ (มีต้นขั้ว + เส้นปะฉีก + หางตั๋วลูกค้า) */
-    .bus-ticket {
+    .sheet-meta {
       display: flex;
-      border: 1.8px solid #1E293B;
-      border-radius: 6px;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4mm;
+      margin-bottom: 2mm;
+      padding-bottom: 1.2mm;
+      border-bottom: 0.25mm solid #E4D8C4;
+      color: #6B5E50;
+      font-size: 7.5pt;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .sheet-meta strong {
+      color: #1A1410;
+      font-weight: 700;
+    }
+
+    /* ตัวตั๋วรถ 1 ใบ (ต้นขั้ว + เส้นปะฉีก + หางตั๋วลูกค้า) */
+    .bus-ticket {
+      display: grid;
+      grid-template-columns: 28% 72%;
+      height: 52mm;
+      border: 0.35mm solid #1A1410;
+      border-radius: 1.6mm;
       overflow: hidden;
-      background: #FDFBF7;
-      position: relative;
+      background: #F4EFE6;
       break-inside: avoid;
       page-break-inside: avoid;
-      height: 54mm;
       box-sizing: border-box;
     }
 
     .tickets-grid-1col .bus-ticket {
-      height: 53mm;
+      height: 52mm;
+      grid-template-columns: 24% 76%;
     }
 
-    /* ส่วนต้นขั้วสำหรับคนขาย (ซ้าย 30%) */
     .ticket-stub {
-      width: 30%;
-      background: #F1F5F9;
-      padding: 6px 7px;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      border-right: 2px dashed #475569;
-      position: relative;
+      gap: 1mm;
+      padding: 2mm 1.6mm 1.8mm 2mm;
+      background: #E7EFE4;
+      border-right: 0.45mm dashed #2F4A3A;
       box-sizing: border-box;
     }
 
-    /* สัญลักษณ์รอยปรุฉีกตั๋ว */
-    .ticket-stub::after {
-      content: "✂";
-      position: absolute;
-      right: -8px;
-      top: 50%;
-      transform: translateY(-50%) rotate(-90deg);
-      font-size: 12px;
-      color: #334155;
-      background: #FDFBF7;
-      padding: 0 2px;
-      line-height: 1;
+    .stub-top,
+    .stub-bottom,
+    .ticket-head,
+    .ticket-body,
+    .ticket-foot {
+      min-width: 0;
     }
 
-    /* ส่วนบัตรสำหรับลูกค้า (ขวา 70%) */
+    .stub-kicker {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.3mm;
+      padding-bottom: 0.8mm;
+      border-bottom: 0.2mm solid rgba(47, 74, 58, 0.35);
+      color: #2F4A3A;
+      font-size: 6.4pt;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .stub-serial,
+    .ticket-serial {
+      color: #9A4E1C;
+      font-family: 'Prompt', sans-serif;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .stub-serial { font-size: 8pt; }
+    .ticket-serial { font-size: 8.5pt; }
+
+    .stub-name {
+      margin-top: 1.2mm;
+      color: #1A1410;
+      font-size: 8pt;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .stub-sub {
+      margin-top: 0.4mm;
+      color: #2F4A3A;
+      font-size: 6.5pt;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .stub-marks,
+    .ticket-marks {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 1mm;
+    }
+
+    .stub-marks { margin-top: 1.4mm; }
+
+    .mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6mm;
+      padding: 0.2mm 1mm;
+      border: 0.25mm solid #1A1410;
+      border-radius: 0.6mm;
+      background: #fff;
+      color: #1A1410;
+      font-size: 6.6pt;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .mark-on {
+      background: #2F4A3A;
+      border-color: #2F4A3A;
+      color: #F4EFE6;
+    }
+
+    .stub-bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1mm;
+      padding-top: 1mm;
+      border-top: 0.2mm solid rgba(47, 74, 58, 0.35);
+    }
+
+    .seller-line {
+      color: #2F4A3A;
+      font-size: 6.4pt;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .seller-line span {
+      display: inline-block;
+      min-width: 8mm;
+      border-bottom: 0.25mm solid #1A1410;
+    }
+
+    .price-chip {
+      flex: 0 0 auto;
+      padding: 0.5mm 1.3mm;
+      border-radius: 0.8mm;
+      background: #2F4A3A;
+      color: #F4EFE6;
+      font-size: 7.4pt;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
     .ticket-main {
-      width: 70%;
-      padding: 6px 9px;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 16.5mm;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      column-gap: 1.8mm;
+      row-gap: 0.6mm;
+      padding: 1.8mm 1.8mm 1.6mm 2.4mm;
+      background: linear-gradient(180deg, #FFF8EC 0%, #F4EFE6 72%);
+      box-sizing: border-box;
+    }
+
+    .tickets-grid-1col .ticket-main {
+      grid-template-columns: minmax(0, 1fr) 24mm;
+    }
+
+    .ticket-side {
+      grid-column: 2;
+      grid-row: 1 / span 3;
       display: flex;
       flex-direction: column;
+      align-items: flex-end;
       justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-      box-sizing: border-box;
-      background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 60%, #ECFDF5 100%);
+      gap: 1mm;
+      min-width: 0;
     }
 
-    /* ลายน้ำรูปบอลลูนด้านขวา */
-    .ticket-bg-art {
-      position: absolute;
-      right: 4px;
-      bottom: 4px;
-      width: 58px;
-      height: 58px;
+    .ticket-art {
+      width: 15mm;
+      height: 15mm;
       object-fit: cover;
-      border-radius: 8px;
-      border: 1.5px solid #D97706;
-      opacity: 0.92;
-      z-index: 1;
+      border-radius: 1.2mm;
+      border: 0.3mm solid #C9892A;
     }
 
-    .tickets-grid-1col .ticket-bg-art {
-      width: 86px;
-      height: 86px;
-      right: 10px;
-      bottom: 8px;
+    .tickets-grid-1col .ticket-art {
+      width: 20mm;
+      height: 20mm;
     }
 
-    .ticket-content-layer {
-      position: relative;
-      z-index: 2;
+    .tickets-grid-1col .ticket-art {
+      width: 20mm;
+      height: 20mm;
+    }
+
+    .ticket-head {
+      grid-column: 1;
+      grid-row: 1;
+      padding-bottom: 0.7mm;
+      border-bottom: 0.25mm solid rgba(201, 137, 42, 0.55);
+    }
+
+    .ticket-festival {
+      color: #2F4A3A;
+      font-family: 'Noto Serif Thai', serif;
+      font-size: 8pt;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .ticket-body {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.7mm;
+    }
+
+    .ticket-title {
+      color: #1A1410;
+      font-size: 8.4pt;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .ticket-when {
+      color: #1A1410;
+      font-size: 7.4pt;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .ticket-time {
+      color: #9A4E1C;
+      font-size: 7.6pt;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .ticket-place {
+      color: #1A1410;
+      font-size: 7pt;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .ticket-foot {
+      grid-column: 1;
+      grid-row: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2mm;
+      padding-top: 0.8mm;
+      border-top: 0.25mm solid rgba(154, 78, 28, 0.35);
+    }
+
+    .ticket-phone {
+      color: #2F4A3A;
+      font-size: 6.7pt;
+      font-weight: 600;
+      line-height: 1.2;
     }
 
     /* ตั้งค่าสำหรับการสั่งพิมพ์ลงกระดาษ A4 จริง */
@@ -420,99 +614,70 @@
       let mainDateHtml = '';
 
       if (dateMode === '20') {
-        stubDateHtml = `<div class="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded px-1.5 py-0.5 text-center">ศุกร์ที่ 20 พ.ย. 2569</div>`;
-        mainDateHtml = `<span class="inline-block bg-emerald-800 text-white font-bold px-2 py-0.5 rounded text-[11px]">วันที่ 20 พฤศจิกายน 2569</span>`;
+        stubDateHtml = `<div class="stub-marks"><span class="mark mark-on">ศุกร์ 20 พ.ย.</span></div>`;
+        mainDateHtml = `
+          <div class="ticket-when">วันที่ 20 พฤศจิกายน 2569</div>
+          <div class="ticket-marks"><span class="mark mark-on">ศุกร์ 20 พ.ย.</span></div>
+        `;
       } else if (dateMode === '21') {
-        stubDateHtml = `<div class="text-[10px] font-bold text-amber-900 bg-amber-100 border border-amber-300 rounded px-1.5 py-0.5 text-center">เสาร์ที่ 21 พ.ย. 2569</div>`;
-        mainDateHtml = `<span class="inline-block bg-amber-700 text-white font-bold px-2 py-0.5 rounded text-[11px]">วันที่ 21 พฤศจิกายน 2569</span>`;
+        stubDateHtml = `<div class="stub-marks"><span class="mark mark-on">เสาร์ 21 พ.ย.</span></div>`;
+        mainDateHtml = `
+          <div class="ticket-when">วันที่ 21 พฤศจิกายน 2569</div>
+          <div class="ticket-marks"><span class="mark mark-on">เสาร์ 21 พ.ย.</span></div>
+        `;
       } else {
         stubDateHtml = `
-          <div class="flex items-center justify-between text-[9.5px] font-semibold text-slate-700 bg-white border border-slate-300 rounded px-1.5 py-0.5">
-            <span>☐ 20 พ.ย. 69</span>
-            <span>☐ 21 พ.ย. 69</span>
+          <div class="stub-marks">
+            <span class="mark">☐ 20</span>
+            <span class="mark">☐ 21</span>
           </div>
         `;
         mainDateHtml = `
-          <div class="flex flex-wrap items-center gap-2 text-[10.5px] font-bold text-slate-900">
-            <span>วันที่ 20-21 พฤศจิกายน 2569</span>
-            <span class="bg-white border border-slate-400 px-1.5 py-0.2 rounded text-[9.5px]">☐ ศุกร์ 20 พ.ย.</span>
-            <span class="bg-white border border-slate-400 px-1.5 py-0.2 rounded text-[9.5px]">☐ เสาร์ 21 พ.ย.</span>
+          <div class="ticket-when">วันที่ 20-21 พฤศจิกายน 2569</div>
+          <div class="ticket-marks">
+            <span class="mark">☐ ศุกร์ 20 พ.ย.</span>
+            <span class="mark">☐ เสาร์ 21 พ.ย.</span>
           </div>
         `;
       }
 
       return `
-        <div class="bus-ticket">
-          <!-- ต้นขั้วสำหรับคนขาย (ซ้าย) -->
+        <article class="bus-ticket">
           <div class="ticket-stub">
-            <div>
-              <div class="flex items-center justify-between border-b border-slate-300 pb-0.5 mb-1">
-                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-600">ต้นขั้วบัตร</span>
-                <span class="text-[11px] font-extrabold text-red-700 font-mono">NO.${serialStr}</span>
+            <div class="stub-top">
+              <div class="stub-kicker">
+                <span>ต้นขั้ว</span>
+                <span class="stub-serial">NO. ${serialStr}</span>
               </div>
-              <div class="text-[10.5px] font-extrabold text-slate-900 leading-tight">
-                บัตรชมมินิบอลลูน
-              </div>
-              <div class="text-[9.5px] font-semibold text-slate-600 leading-tight mt-0.5">
-                เทศกาลท่องเที่ยวเมืองพร้าว
-              </div>
-              <div class="text-[9px] text-slate-600 leading-tight mt-0.5">
-                20-21 พ.ย. 2569 · 18.00-20.00 น.
-              </div>
-              <div class="text-[9px] text-slate-600 leading-tight">
-                ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว
-              </div>
-            </div>
-
-            <div class="space-y-1">
+              <div class="stub-name">บัตรชมมินิบอลลูน</div>
+              <div class="stub-sub">คนละ 100 บาท</div>
               ${stubDateHtml}
-              <div class="flex items-center justify-between pt-0.5 border-t border-slate-300">
-                <span class="text-[9px] text-slate-500">ผู้ขาย:................</span>
-                <span class="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-400">100 บาท</span>
-              </div>
+            </div>
+            <div class="stub-bottom">
+              <div class="seller-line">ผู้ขาย <span></span></div>
+              <div class="price-chip">100 บาท</div>
             </div>
           </div>
-
-          <!-- ส่วนหางตั๋วสำหรับฉีกให้ลูกค้า (ขวา) -->
           <div class="ticket-main">
-            <img src="${imgSrc}" alt="มินิบอลลูนเมืองพร้าว" class="ticket-bg-art" />
-
-            <div class="ticket-content-layer">
-              <div class="flex items-center justify-between gap-1 border-b border-amber-700/30 pb-1">
-                <span class="text-[10px] font-extrabold text-emerald-900 uppercase tracking-tight">
-                  🎈 เทศกาลท่องเที่ยวเมืองพร้าว 2569
-                </span>
-                <span class="text-[12px] font-extrabold text-red-700 font-mono bg-white/90 px-1.5 rounded border border-red-300">
-                  NO. ${serialStr}
-                </span>
-              </div>
-
-              <div class="mt-1">
-                <div class="text-[13px] font-extrabold text-slate-950 leading-snug">
-                  จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท
-                </div>
-                <div class="mt-0.5">
-                  ${mainDateHtml}
-                </div>
-                <div class="text-[10.5px] font-bold text-amber-900 mt-0.5">
-                  เวลา 18.00 - 20.00 น.
-                </div>
-                <div class="text-[10px] font-semibold text-slate-800 leading-tight mt-0.5 pr-14">
-                  ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่
-                </div>
-              </div>
+            <div class="ticket-side">
+              <div class="ticket-serial">NO. ${serialStr}</div>
+              <img src="${imgSrc}" alt="" class="ticket-art" />
             </div>
-
-            <div class="ticket-content-layer flex items-center justify-between pt-1 border-t border-amber-700/25 pr-16">
-              <div class="text-[9px] font-medium text-slate-600">
-                โทร. 081-669-6653 • บัตร 1 ใบ / 1 ท่าน
-              </div>
-              <div class="inline-flex items-center gap-1 bg-amber-500 text-slate-950 font-extrabold text-[11.5px] px-2.5 py-0.5 rounded-full border border-amber-700 shadow-sm">
-                ราคา 100 บาท
-              </div>
+            <div class="ticket-head">
+              <div class="ticket-festival">เทศกาลท่องเที่ยวเมืองพร้าว 2569</div>
+            </div>
+            <div class="ticket-body">
+              <div class="ticket-title">จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท</div>
+              ${mainDateHtml}
+              <div class="ticket-time">เวลา 18.00 - 20.00 น.</div>
+              <div class="ticket-place">ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</div>
+            </div>
+            <div class="ticket-foot">
+              <div class="ticket-phone">โทร. 081-669-6653</div>
+              <div class="price-chip">100 บาท</div>
             </div>
           </div>
-        </div>
+        </article>
       `;
     }
 
@@ -566,9 +731,9 @@
           const gridClass = cols === 2 ? 'tickets-grid-2col' : 'tickets-grid-1col';
           sheetsHtml += `
             <div class="a4-sheet">
-              <div class="flex items-center justify-between text-[9.5px] text-slate-500 border-b border-slate-200 pb-1 mb-2">
-                <span>จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท • เทศกาลท่องเที่ยวเมืองพร้าว วันที่ 20-21 พฤศจิกายน 2569 เวลา 18.00 - 20.00 น. ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่</span>
-                <span class="font-mono font-bold">แผ่นที่ ${pageIdx + 1}/${totalPages} (NO.${formatSerial(pageStart)}-${formatSerial(pageEnd)})</span>
+              <div class="sheet-meta">
+                <span>จำหน่ายบัตรชมมินิบอลลูน คนละ 100 บาท · <strong>เทศกาลท่องเที่ยวเมืองพร้าว 2569</strong></span>
+                <span>แผ่นที่ ${pageIdx + 1}/${totalPages} · NO.${formatSerial(pageStart)}–${formatSerial(pageEnd)}</span>
               </div>
               <div class="${gridClass}">
                 ${cardsHtml}

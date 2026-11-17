@@ -562,8 +562,8 @@ function handleAdminNavClick() {
     clearAdminLoginFields();
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    const userEl = document.getElementById('adminUsernameInput');
-    if (userEl) userEl.focus();
+    window.setTimeout(clearAdminLoginFields, 80);
+    window.setTimeout(clearAdminLoginFields, 400);
   }
 }
 
