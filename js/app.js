@@ -1,5 +1,5 @@
 /**
- * ระบบควบคุมหลักฝั่งลูกค้าและระบบหลังบ้านแอดมิน (Main Application Controller)
+ * ระบบควบคุมหลักฝั่งลูกค้าและระบบหลังบ้านแอดมิน + ระบบสแกน QR สลิปอัตโนมัติ & ป้องกันสลิปซ้ำ
  * โครงการ: เทศกาลท่องเที่ยวเมืองพร้าว 2569 (Phrao Tourism Festival 2026)
  * ผู้พัฒนา: S.Y. Interactive Development Limited
  */
@@ -11,6 +11,10 @@ const APP_STATE = {
   compressedSlips: {
     lantern: '',
     balloon: ''
+  },
+  slipScanMeta: {
+    lantern: { qrDetected: false, slipQrRef: '', slipQrRaw: '', slipQrDisplay: '', isDuplicate: false, duplicateOf: null },
+    balloon: { qrDetected: false, slipQrRef: '', slipQrRaw: '', slipQrDisplay: '', isDuplicate: false, duplicateOf: null }
   }
 };
 
@@ -212,20 +216,65 @@ function copyCurrentAmount(category) {
 }
 
 /**
- * แสดงตัวอย่างและบีบอัดรูปสลิปเมื่อลูกค้าเลือกไฟล์
+ * สแกน QR ในรูปสลิปอัตโนมัติ + ตรวจสอบสลิปซ้ำกับฐานข้อมูล Supabase ทันทีที่ลูกค้าเลือกไฟล์
  */
 async function previewBookingSlip(event, category) {
   const file = event.target.files && event.target.files[0];
+  const errBox = document.getElementById(`${category}FormError`);
+  const qrStatusEl = document.getElementById(`${category}SlipQrStatus`);
+  const wrap = document.getElementById(`${category}SlipPreviewWrap`);
+  const img = document.getElementById(`${category}SlipPreviewImg`);
+
+  if (errBox) errBox.classList.add('hidden');
   if (!file) return;
+
+  if (qrStatusEl) {
+    qrStatusEl.className = 'text-[11px] text-amber-300 font-semibold';
+    qrStatusEl.textContent = '🔍 กำลังสแกนอ่าน QR สลิปธนาคารและตรวจสอบสลิปซ้ำ...';
+  }
+  if (wrap) wrap.classList.remove('hidden');
+
   try {
-    const dataUrl = await compressSlipImage(file, 880, 0.78);
-    APP_STATE.compressedSlips[category] = dataUrl;
-    const wrap = document.getElementById(`${category}SlipPreviewWrap`);
-    const img = document.getElementById(`${category}SlipPreviewImg`);
-    if (img) img.src = dataUrl;
-    if (wrap) wrap.classList.remove('hidden');
+    const scanResult = await compressAndScanSlipImage(file, 880, 0.78);
+    APP_STATE.compressedSlips[category] = scanResult.dataUrl;
+    if (img) img.src = scanResult.dataUrl;
+
+    // เช็คสลิปซ้ำในฐานข้อมูล Supabase ทันที
+    const duplicateBooking = await findDuplicateSlipBooking(scanResult.slipQrRef, scanResult.slipQrRaw);
+
+    APP_STATE.slipScanMeta[category] = {
+      qrDetected: scanResult.qrDetected,
+      slipQrRef: scanResult.slipQrRef,
+      slipQrRaw: scanResult.slipQrRaw,
+      slipQrDisplay: scanResult.slipQrDisplay,
+      isDuplicate: Boolean(duplicateBooking),
+      duplicateOf: duplicateBooking
+    };
+
+    if (duplicateBooking) {
+      if (qrStatusEl) {
+        qrStatusEl.className = 'text-xs font-extrabold text-red-300 bg-red-950/90 border border-red-500 rounded-lg p-2';
+        qrStatusEl.innerHTML = `🚫 ตรวจพบสลิปซ้ำ! สลิปใบนี้เคยถูกใช้จองแล้วในรหัส <span class="underline">${duplicateBooking.id}</span> (${escapeHtml(duplicateBooking.customerName)})`;
+      }
+      if (errBox) {
+        errBox.textContent = `ไม่สามารถใช้สลิปใบนี้ได้ เนื่องจากเคยถูกใช้จองแล้วในรหัส ${duplicateBooking.id}`;
+        errBox.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (scanResult.qrDetected) {
+      if (qrStatusEl) {
+        qrStatusEl.className = 'text-[11px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 rounded-lg p-1.5';
+        qrStatusEl.innerHTML = `✅ สแกน QR สลิปธนาคารสำเร็จ (Ref: <span class="font-mono text-amber-300">${escapeHtml(scanResult.slipQrDisplay)}</span>) • ตรวจสอบแล้วไม่ซ้ำ`;
+      }
+    } else {
+      if (qrStatusEl) {
+        qrStatusEl.className = 'text-[11px] font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/30 rounded-lg p-1.5';
+        qrStatusEl.innerHTML = `ℹ️ แนบรูปแล้ว (ไม่พบ QR ในภาพ ระบบใช้รหัสภาพ ${escapeHtml(scanResult.slipQrRef.slice(0, 14))} ตรวจสอบไม่ซ้ำ และรอแอดมินตรวจยอด)`;
+      }
+    }
   } catch (err) {
-    const errBox = document.getElementById(`${category}FormError`);
     if (errBox) {
       errBox.textContent = err.message;
       errBox.classList.remove('hidden');
@@ -250,6 +299,7 @@ async function submitCustomerBooking(event, category) {
   const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
   const note = document.getElementById(`${category}CustomerNote`).value.trim();
   const slipDataUrl = APP_STATE.compressedSlips[category];
+  const scanMeta = APP_STATE.slipScanMeta[category] || {};
 
   if (!customerName) {
     errBox.textContent = 'กรุณากรอกชื่อผู้จอง';
@@ -267,6 +317,13 @@ async function submitCustomerBooking(event, category) {
     return;
   }
 
+  // บล็อกทันทีหากเป็นสลิปซ้ำ
+  if (scanMeta.isDuplicate && scanMeta.duplicateOf) {
+    errBox.textContent = `🚫 ไม่สามารถส่งสลิปซ้ำได้! สลิปใบนี้เคยถูกใช้จองแล้วในรหัส ${scanMeta.duplicateOf.id} กรุณาแนบสลิปใบใหม่`;
+    errBox.classList.remove('hidden');
+    return;
+  }
+
   // ตรวจสอบสถานะเปิดรับจอง
   if (isLantern) {
     const openKey = eventDate === '2026-11-24' ? 'open_2026_11_24' : 'open_2026_11_25';
@@ -279,7 +336,7 @@ async function submitCustomerBooking(event, category) {
 
   const origBtnHtml = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '⏳ กำลังบันทึกข้อมูลและออกบัตร E-Ticket...';
+  submitBtn.innerHTML = '⏳ กำลังตรวจสอบสลิปและออกบัตร E-Ticket...';
 
   try {
     const newBooking = await createBookingRecord({
@@ -290,19 +347,21 @@ async function submitCustomerBooking(event, category) {
       quantity,
       paymentMethod: 'promptpay_qr',
       slipDataUrl,
+      slipQrRef: scanMeta.slipQrRef || '',
+      slipQrRaw: scanMeta.slipQrRaw || '',
       paymentStatus: 'pending',
       checkedIn: false,
       channel: 'online',
       note
     });
 
-    // อัปเดต State ในแอป
     APP_STATE.bookings = [newBooking, ...APP_STATE.bookings.filter(b => b.id !== newBooking.id)];
     updateCustomerQuotaBadges();
 
     // รีเซ็ตฟอร์ม
     document.getElementById(`${category}BookingForm`).reset();
     APP_STATE.compressedSlips[category] = '';
+    APP_STATE.slipScanMeta[category] = { qrDetected: false, slipQrRef: '', slipQrRaw: '', slipQrDisplay: '', isDuplicate: false, duplicateOf: null };
     const previewWrap = document.getElementById(`${category}SlipPreviewWrap`);
     if (previewWrap) previewWrap.classList.add('hidden');
     if (isLantern) {
@@ -313,10 +372,9 @@ async function submitCustomerBooking(event, category) {
       onBalloonQtyInput();
     }
 
-    // แสดง E-Ticket ทันที
     showETicketModal(newBooking);
   } catch (err) {
-    errBox.textContent = `เกิดข้อผิดพลาด: ${err.message}`;
+    errBox.textContent = err.message;
     errBox.classList.remove('hidden');
   } finally {
     submitBtn.disabled = false;
@@ -373,6 +431,12 @@ function showETicketModal(booking) {
         <span class="text-slate-600 font-medium">ยอดชำระรวม:</span>
         <span class="font-extrabold text-emerald-700">${Number(booking.totalAmount).toLocaleString()} บาท</span>
       </div>
+      ${booking.slipQrRef ? `
+        <div class="flex justify-between">
+          <span class="text-slate-600 font-medium">รหัสสลิปอ้างอิง:</span>
+          <span class="font-mono text-[11px] font-bold text-slate-700">${escapeHtml(booking.slipQrRef.slice(0, 22))}</span>
+        </div>
+      ` : ''}
       <div class="flex justify-between">
         <span class="text-slate-600 font-medium">กำหนดการ:</span>
         <span class="font-bold text-slate-800">
@@ -548,31 +612,26 @@ function renderAdminKpiAndInventory() {
     .filter(b => b.paymentStatus === 'pending')
     .reduce((s, b) => s + Number(b.totalAmount || 0), 0);
 
-  // โคมลอย 24 พ.ย.
   const l24 = activeBookings.filter(b => b.category === 'lantern' && b.eventDate === '2026-11-24');
   const l24Qty = l24.reduce((s, b) => s + Number(b.quantity || 0), 0);
   const l24People = l24.reduce((s, b) => s + Number(b.attendees || 0), 0);
   const l24Rev = l24.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
   const l24Rem = Math.max(0, Number(APP_STATE.settings.quota_2026_11_24 || 200) - l24Qty);
 
-  // โคมลอย 25 พ.ย.
   const l25 = activeBookings.filter(b => b.category === 'lantern' && b.eventDate === '2026-11-25');
   const l25Qty = l25.reduce((s, b) => s + Number(b.quantity || 0), 0);
   const l25People = l25.reduce((s, b) => s + Number(b.attendees || 0), 0);
   const l25Rev = l25.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
   const l25Rem = Math.max(0, Number(APP_STATE.settings.quota_2026_11_25 || 200) - l25Qty);
 
-  // มินิบอลลูน 20 พ.ย.
   const b20 = activeBookings.filter(b => b.category === 'balloon' && b.eventDate === '2026-11-20');
   const b20Qty = b20.reduce((s, b) => s + Number(b.quantity || 0), 0);
   const b20Rev = b20.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
 
-  // มินิบอลลูน 21 พ.ย.
   const b21 = activeBookings.filter(b => b.category === 'balloon' && b.eventDate === '2026-11-21');
   const b21Qty = b21.reduce((s, b) => s + Number(b.quantity || 0), 0);
   const b21Rev = b21.reduce((s, b) => s + Number(b.totalAmount || 0), 0);
 
-  // สถานะเช็คอิน
   const checkedInCount = activeBookings.filter(b => b.checkedIn).length;
   const waitingCheckinCount = activeBookings.filter(b => !b.checkedIn).length;
 
@@ -630,7 +689,6 @@ function renderAdminKpiAndInventory() {
     `;
   }
 
-  // ตารางคำนวณสิ่งของที่สตาฟต้องเตรียมหน้างาน (Inventory Calculator)
   const totalLanternsAll = l24Qty + l25Qty;
   const totalPeopleAll = l24People + l25People;
   const invWrap = document.getElementById('adminInventoryTableWrap');
@@ -690,7 +748,7 @@ function getFilteredAdminBookings() {
     if (statusFilter === 'not_checkedin' && b.checkedIn) return false;
 
     if (searchStr) {
-      const hay = `${b.id} ${b.customerName} ${b.phone} ${b.note || ''}`.toLowerCase();
+      const hay = `${b.id} ${b.customerName} ${b.phone} ${b.slipQrRef || ''} ${b.note || ''}`.toLowerCase();
       if (!hay.includes(searchStr)) return false;
     }
     return true;
@@ -721,8 +779,15 @@ function renderAdminBookingsTable() {
         ? `<span class="px-2.5 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-bold">❌ ยกเลิก</span>`
         : `<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">⏳ รอตรวจสลิป</span>`;
 
+    const qrBadge = b.slipQrRef && b.slipQrRef.startsWith('QR-')
+      ? `<div class="text-[10px] text-emerald-400 font-mono mt-0.5" title="${escapeHtml(b.slipQrRef)}">🛡️ QR: ${escapeHtml(b.slipQrRef.slice(3, 15))}..</div>`
+      : '';
+
     const slipBtn = b.slipDataUrl
-      ? `<button onclick="openSlipInspectorModal('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold">🔍 ดูสลิป</button>`
+      ? `<div>
+           <button onclick="openSlipInspectorModal('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold">🔍 ดูสลิป</button>
+           ${qrBadge}
+         </div>`
       : `<span class="text-slate-500">${b.channel === 'walkin' ? 'ขายหน้างาน' : 'ไม่มีรูป'}</span>`;
 
     const checkinBtn = b.checkedIn
@@ -767,6 +832,19 @@ function openSlipInspectorModal(bookingId) {
   const b = APP_STATE.bookings.find(item => item.id === bookingId);
   if (!b) return;
   const content = document.getElementById('slipInspectorContent');
+
+  const qrInfoHtml = b.slipQrRef
+    ? b.slipQrRef.startsWith('QR-')
+      ? `<div class="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-bold flex items-center justify-between">
+           <span>🛡️ สแกน QR สลิปธนาคารแล้ว (ไม่ซ้ำกับใบจองอื่น)</span>
+           <span class="font-mono text-amber-300">${escapeHtml(b.slipQrRef)}</span>
+         </div>`
+      : `<div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-between">
+           <span>ℹ️ ลายนิ้วมือไฟล์ภาพ (ไม่ซ้ำ):</span>
+           <span class="font-mono text-amber-300">${escapeHtml(b.slipQrRef)}</span>
+         </div>`
+    : '';
+
   content.innerHTML = `
     <div class="p-3 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-between">
       <div>
@@ -774,10 +852,12 @@ function openSlipInspectorModal(bookingId) {
         <div class="text-slate-400">รหัส: <strong class="text-amber-300">${b.id}</strong> • ${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</div>
       </div>
       <div class="text-right">
-        <div class="text-xs text-slate-400">ยอดที่ต้องโอน</div>
+        <div class="text-xs text-slate-400">ยอดที่ต้องโอนเข้าบัญชี น.ส.กนกพิชญ์</div>
         <div class="text-lg font-extrabold text-emerald-400">${Number(b.totalAmount).toLocaleString()} บาท</div>
       </div>
     </div>
+
+    ${qrInfoHtml}
 
     <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center">
       ${b.slipDataUrl
@@ -996,6 +1076,7 @@ function exportBookingsToCsv() {
     'จำนวน(โคม/ใบ)',
     'จำนวนผู้เข้าร่วม(ท่าน)',
     'ยอดชำระ(บาท)',
+    'รหัสสลิปQRอ้างอิง',
     'ช่องทาง',
     'สถานะสลิป',
     'สถานะเช็คอินหน้างาน',
@@ -1014,6 +1095,7 @@ function exportBookingsToCsv() {
       b.quantity,
       b.attendees,
       b.totalAmount,
+      `"${String(b.slipQrRef || '').replace(/"/g, '""')}"`,
       `"${b.channel === 'walkin' ? 'ขายหน้างาน' : 'จองออนไลน์'}"`,
       `"${b.paymentStatus}"`,
       `"${b.checkedIn ? 'รับของแล้ว' : 'ยังไม่รับ'}"`,
@@ -1022,7 +1104,6 @@ function exportBookingsToCsv() {
     ].join(','))
   ];
 
-  // ใส่ UTF-8 BOM (\uFEFF) เพื่อให้เปิดใน Microsoft Excel แล้วภาษาไทยไม่เพี้ยน 100%
   const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -1033,7 +1114,7 @@ function exportBookingsToCsv() {
 }
 
 /**
- * พิมพ์ใบรายชื่อผู้จองสำหรับวางโต๊ะลงทะเบียนเวลา 18.00 น. (มีช่องให้ลูกค้าเซ็นรับโคมลอย)
+ * พิมพ์ใบรายชื่อผู้จองสำหรับวางโต๊ะลงทะเบียนเวลา 18.00 น.
  */
 function printRegistrationCheckinSheet() {
   const rows = getFilteredAdminBookings();

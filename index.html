@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>พรีออเดอร์ปล่อยโคมลอย & บัตรชมมินิบอลลูน — เทศกาลท่องเที่ยวเมืองพร้าว 2569 ณ โฮงชาฮักมี</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -354,9 +355,9 @@
                 <input id="lanternSlipInput" type="file" accept="image/*" required onchange="previewBookingSlip(event, 'lantern')"
                   class="block w-full text-xs text-slate-300 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer bg-slate-900 border border-slate-700 rounded-xl p-1.5" />
 
-                <div id="lanternSlipPreviewWrap" class="hidden mt-2 relative bg-slate-900 border border-emerald-500/40 rounded-xl p-2 text-center">
+                <div id="lanternSlipPreviewWrap" class="hidden mt-2 relative bg-slate-900 border border-emerald-500/40 rounded-xl p-2 text-center space-y-1.5">
                   <img id="lanternSlipPreviewImg" src="" alt="ตัวอย่างสลิปโอนเงิน" class="max-h-40 mx-auto rounded-lg object-contain" />
-                  <div class="text-[11px] text-emerald-400 font-semibold mt-1">✅ แนบรูปสลิปเรียบร้อยแล้ว</div>
+                  <div id="lanternSlipQrStatus" class="text-[11px] text-emerald-400 font-semibold">✅ แนบรูปสลิปเรียบร้อยแล้ว</div>
                 </div>
               </div>
             </div>
@@ -519,8 +520,9 @@
                 <label class="block text-xs font-bold text-emerald-300 mb-1">แนบรูปสลิปโอนเงิน <span class="text-red-400">*</span></label>
                 <input id="balloonSlipInput" type="file" accept="image/*" required onchange="previewBookingSlip(event, 'balloon')"
                   class="block w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500 file:text-slate-950 cursor-pointer bg-slate-900 border border-slate-700 rounded-xl p-1.5" />
-                <div id="balloonSlipPreviewWrap" class="hidden mt-2 bg-slate-900 border border-emerald-500/40 rounded-xl p-2 text-center">
+                <div id="balloonSlipPreviewWrap" class="hidden mt-2 bg-slate-900 border border-emerald-500/40 rounded-xl p-2 text-center space-y-1.5">
                   <img id="balloonSlipPreviewImg" src="" alt="สลิปโอนเงิน" class="max-h-36 mx-auto rounded-lg object-contain" />
+                  <div id="balloonSlipQrStatus" class="text-[11px] text-emerald-400 font-semibold">✅ แนบรูปสลิปเรียบร้อยแล้ว</div>
                 </div>
               </div>
             </div>

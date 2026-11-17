@@ -1,5 +1,5 @@
 /**
- * ระบบฐานข้อมูลและการเชื่อมต่อ Supabase Cloud Sync (Data & Cloud Layer)
+ * ระบบฐานข้อมูลและการเชื่อมต่อ Supabase Cloud Sync + ระบบสแกน QR สลิปอัตโนมัติ & ป้องกันสลิปซ้ำ
  * โครงการ: เทศกาลท่องเที่ยวเมืองพร้าว 2569 (Phrao Tourism Festival 2026)
  * ผู้พัฒนา: S.Y. Interactive Development Limited
  */
@@ -43,6 +43,8 @@ function dbRowToBooking(row) {
     totalAmount: Number(row.total_amount || row.totalAmount) || 0,
     paymentMethod: row.payment_method || row.paymentMethod || 'promptpay_qr',
     slipDataUrl: row.slip_data_url ?? row.slipDataUrl ?? '',
+    slipQrRef: row.slip_qr_ref ?? row.slipQrRef ?? '',
+    slipQrRaw: row.slip_qr_raw ?? row.slipQrRaw ?? '',
     paymentStatus: row.payment_status || row.paymentStatus || 'pending',
     checkedIn: Boolean(row.checked_in ?? row.checkedIn ?? false),
     checkedInAt: row.checked_in_at || row.checkedInAt || null,
@@ -70,6 +72,8 @@ function bookingToDbRow(booking) {
     total_amount: Number(booking.totalAmount),
     payment_method: booking.paymentMethod || 'promptpay_qr',
     slip_data_url: booking.slipDataUrl || null,
+    slip_qr_ref: booking.slipQrRef || null,
+    slip_qr_raw: booking.slipQrRaw || null,
     payment_status: booking.paymentStatus || 'pending',
     checked_in: Boolean(booking.checkedIn),
     checked_in_at: booking.checkedInAt || null,
@@ -82,7 +86,7 @@ function bookingToDbRow(booking) {
 }
 
 /**
- * เรียกใช้ Supabase REST API (PostgREST) พร้อมระบบสลับ Key อัตโนมัติหากจำเป็น
+ * เรียกใช้ Supabase REST API (PostgREST)
  */
 async function supabaseRestFetch(path, options = {}) {
   const apiKey = SUPABASE_CONFIG.anonKey || SUPABASE_CONFIG.publishableKey;
@@ -123,7 +127,6 @@ function saveLocalBookingsCache(bookings) {
   try {
     localStorage.setItem(STORAGE_KEYS.BOOKINGS_CACHE, JSON.stringify(bookings));
   } catch (e) {
-    // กรณีพื้นที่เต็ม ให้เก็บรูปสลิปเฉพาะรายการล่าสุดใน LocalStorage (บน Supabase เก็บครบ 100%)
     try {
       const slim = bookings.map((b, idx) => idx < 30 ? b : { ...b, slipDataUrl: '' });
       localStorage.setItem(STORAGE_KEYS.BOOKINGS_CACHE, JSON.stringify(slim));
@@ -146,6 +149,216 @@ async function fetchAllBookings() {
     window.PHRAO_CLOUD_ONLINE = false;
     return getLocalBookingsCache();
   }
+}
+
+/**
+ * ตรวจสอบว่าสลิปโอนเงินใบนี้ (จากรหัส QR สลิป หรือ ลายนิ้วมือภาพ SHA-256) เคยถูกใช้จองไปแล้วหรือยัง
+ */
+async function findDuplicateSlipBooking(slipQrRef, slipQrRaw) {
+  if (!slipQrRef && !slipQrRaw) return null;
+
+  // 1. ตรวจสอบจาก Supabase แบบ Real-time ก่อน
+  try {
+    if (slipQrRef) {
+      const rows = await supabaseRestFetch(
+        `bookings?slip_qr_ref=eq.${encodeURIComponent(slipQrRef)}&payment_status=neq.rejected&select=id,customer_name,event_date,total_amount,created_at`
+      );
+      if (Array.isArray(rows) && rows.length > 0) {
+        return dbRowToBooking(rows[0]);
+      }
+    }
+    if (slipQrRaw) {
+      const rowsRaw = await supabaseRestFetch(
+        `bookings?slip_qr_raw=eq.${encodeURIComponent(slipQrRaw)}&payment_status=neq.rejected&select=id,customer_name,event_date,total_amount,created_at`
+      );
+      if (Array.isArray(rowsRaw) && rowsRaw.length > 0) {
+        return dbRowToBooking(rowsRaw[0]);
+      }
+    }
+  } catch (err) {
+    console.warn('Duplicate slip cloud check fallback:', err.message);
+  }
+
+  // 2. ตรวจสอบใน Local Cache สำรอง
+  const local = getLocalBookingsCache();
+  return local.find(b =>
+    b.paymentStatus !== 'rejected' &&
+    ((slipQrRef && b.slipQrRef === slipQrRef) || (slipQrRaw && b.slipQrRaw === slipQrRaw))
+  ) || null;
+}
+
+/**
+ * แยกวิเคราะห์ข้อมูล QR สลิปธนาคารไทย (Thai Bank Mini-QR / EMVCo Payload)
+ * เพื่อดึงรหัสอ้างอิงธุรกรรมธนาคาร (Transaction Reference ID)
+ */
+function parseThaiBankSlipQrPayload(rawQrText) {
+  if (!rawQrText || typeof rawQrText !== 'string') return null;
+  const trimmed = rawQrText.trim();
+
+  // รูปแบบ EMVCo ของสลิปธนาคารไทย มักขึ้นต้นด้วย 00...
+  // พยายามดึงรหัสอ้างอิงธุรกรรมความยาว 15-35 ตัวอักษรที่เป็นตัวเลข/ตัวอักษรภาษาอังกฤษ
+  const refMatches = trimmed.match(/[0-9]{12,25}[A-Z0-9]{0,10}|[A-Z0-9]{15,32}/g);
+  let refCode = trimmed;
+  if (refMatches && refMatches.length > 0) {
+    // เลือกชุดรหัสอ้างอิงที่ยาวและจำเพาะที่สุด
+    refCode = refMatches.reduce((a, b) => (b.length >= a.length ? b : a), refMatches[0]);
+  }
+  return {
+    raw: trimmed,
+    ref: `QR-${refCode.slice(0, 36)}`,
+    displayRef: refCode.slice(0, 28),
+    isBankSlipQr: trimmed.startsWith('00') || trimmed.length >= 18
+  };
+}
+
+/**
+ * คำนวณ SHA-256 Fingerprint ของไฟล์รูปสลิป (ใช้ป้องกันการส่งไฟล์รูปเดิมซ้ำแม้รูปไม่มี QR)
+ */
+async function computeFileSha256(file) {
+  try {
+    if (!window.crypto || !window.crypto.subtle) return '';
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return `IMG-${hashHex.slice(0, 28)}`;
+  } catch (_) {
+    return '';
+  }
+}
+
+/**
+ * สแกนหา QR Code จากรูปภาพสลิปด้วย Multi-Region & Contrast Enhancement (รองรับสลิปทุกธนาคารไทย)
+ */
+async function decodeQrFromImageElement(img) {
+  // 1. ลองใช้ Native BarcodeDetector ของเบราว์เซอร์ก่อน (ถ้ามี)
+  if ('BarcodeDetector' in window) {
+    try {
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      const barcodes = await detector.detect(img);
+      if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+        return barcodes[0].rawValue;
+      }
+    } catch (_) {}
+  }
+
+  // 2. ใช้ไลบรารี jsQR สแกนหลายโซนของภาพสลิป (เต็มใบ, ครึ่งล่าง, มุมขวาล่าง, มุมซ้ายล่าง, กลางค่อนล่าง)
+  if (typeof window.jsQR !== 'function') return null;
+
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  if (!w || !h) return null;
+
+  const regions = [
+    { sx: 0, sy: 0, sw: w, sh: h, targetMax: 1200, contrast: false },
+    { sx: 0, sy: Math.floor(h * 0.42), sw: w, sh: Math.floor(h * 0.58), targetMax: 1000, contrast: false },
+    { sx: Math.floor(w * 0.35), sy: Math.floor(h * 0.40), sw: Math.floor(w * 0.65), sh: Math.floor(h * 0.60), targetMax: 900, contrast: true },
+    { sx: 0, sy: Math.floor(h * 0.40), sw: Math.floor(w * 0.65), sh: Math.floor(h * 0.60), targetMax: 900, contrast: true },
+    { sx: 0, sy: Math.floor(h * 0.20), sw: w, sh: Math.floor(h * 0.65), targetMax: 1000, contrast: true }
+  ];
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  for (const reg of regions) {
+    let cw = reg.sw;
+    let ch = reg.sh;
+    if (cw > reg.targetMax || ch > reg.targetMax) {
+      const scale = reg.targetMax / Math.max(cw, ch);
+      cw = Math.max(1, Math.round(cw * scale));
+      ch = Math.max(1, Math.round(ch * scale));
+    }
+    canvas.width = cw;
+    canvas.height = ch;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.drawImage(img, reg.sx, reg.sy, reg.sw, reg.sh, 0, 0, cw, ch);
+
+    const imgData = ctx.getImageData(0, 0, cw, ch);
+    const code = window.jsQR(imgData.data, cw, ch, { inversionAttempts: 'attemptBoth' });
+    if (code && code.data) {
+      return code.data;
+    }
+
+    // ถ้ายังไม่เจอและเปิดโหมดเพิ่มความคมชัด (Contrast Threshold) สำหรับสลิปที่มีพื้นหลังลวดลาย
+    if (reg.contrast) {
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        const v = lum < 145 ? 0 : 255;
+        d[i] = v;
+        d[i + 1] = v;
+        d[i + 2] = v;
+      }
+      const codeContrast = window.jsQR(d, cw, ch, { inversionAttempts: 'attemptBoth' });
+      if (codeContrast && codeContrast.data) {
+        return codeContrast.data;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * บีบอัดภาพสลิปโอนเงิน + สแกนอ่าน QR ในรูปสลิปอัตโนมัติ + สร้างรหัสตรวจสอบสลิปซ้ำ
+ */
+function compressAndScanSlipImage(file, maxWidth = 880, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('กรุณาเลือกไฟล์รูปสลิปโอนเงิน'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('ไม่สามารถอ่านไฟล์รูปภาพได้'));
+    reader.onload = (evt) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('ไฟล์ที่เลือกไม่ใช่รูปภาพที่ถูกต้อง'));
+      img.onload = async () => {
+        // 1. สแกน QR Code จากภาพสลิปความละเอียดสูงก่อนบีบอัด
+        const rawQrText = await decodeQrFromImageElement(img);
+        const parsedQr = parseThaiBankSlipQrPayload(rawQrText);
+        const fileHash = await computeFileSha256(file);
+
+        // 2. ย่อและบีบอัดรูปสลิปสำหรับเก็บลงฐานข้อมูล
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxWidth) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxWidth) / height);
+            height = maxWidth;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+        resolve({
+          dataUrl,
+          qrDetected: Boolean(parsedQr && parsedQr.raw),
+          slipQrRef: parsedQr ? parsedQr.ref : fileHash,
+          slipQrDisplay: parsedQr ? parsedQr.displayRef : '',
+          slipQrRaw: parsedQr ? parsedQr.raw : fileHash
+        });
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// คงฟังก์ชันชื่อเดิมไว้เพื่อความเข้ากันได้ย้อนหลัง
+async function compressSlipImage(file, maxWidth = 880, quality = 0.78) {
+  const res = await compressAndScanSlipImage(file, maxWidth, quality);
+  return res.dataUrl;
 }
 
 /**
@@ -186,7 +399,6 @@ function generateBookingId(category, eventDate, existingBookings = []) {
   const nextNum = maxNum + 1;
   const padded = String(nextNum).padStart(4, '0');
   const candidate = `${prefix}-${padded}`;
-  // ป้องกันการชนกันกรณีจองพร้อมกันหลายเครื่อง
   const exists = existingBookings.some(b => b.id === candidate);
   if (exists) {
     const randSuffix = String(Math.floor(1000 + Math.random() * 9000));
@@ -196,9 +408,17 @@ function generateBookingId(category, eventDate, existingBookings = []) {
 }
 
 /**
- * บันทึกรายการจองใหม่ลง Supabase และ Local Cache
+ * บันทึกรายการจองใหม่ลง Supabase และ Local Cache (พร้อมตรวจสอบสลิปซ้ำก่อนบันทึก)
  */
 async function createBookingRecord(bookingData) {
+  // ตรวจสอบสลิปซ้ำอีกครั้งก่อนบันทึกลงฐานข้อมูล
+  if (bookingData.channel !== 'walkin' && (bookingData.slipQrRef || bookingData.slipQrRaw)) {
+    const dup = await findDuplicateSlipBooking(bookingData.slipQrRef, bookingData.slipQrRaw);
+    if (dup) {
+      throw new Error(`ไม่สามารถใช้สลิปซ้ำได้! สลิปใบนี้เคยใช้จองแล้วในรหัส ${dup.id} (${dup.customerName})`);
+    }
+  }
+
   const currentList = await fetchAllBookings();
   const id = bookingData.id || generateBookingId(bookingData.category, bookingData.eventDate, currentList);
   const nowIso = new Date().toISOString();
@@ -220,6 +440,8 @@ async function createBookingRecord(bookingData) {
     totalAmount,
     paymentMethod: bookingData.paymentMethod || 'promptpay_qr',
     slipDataUrl: bookingData.slipDataUrl || '',
+    slipQrRef: bookingData.slipQrRef || '',
+    slipQrRaw: bookingData.slipQrRaw || '',
     paymentStatus: bookingData.paymentStatus || 'pending',
     checkedIn: Boolean(bookingData.checkedIn || false),
     checkedInAt: bookingData.checkedInAt || null,
@@ -257,7 +479,6 @@ async function updateBookingRecord(id, patch) {
   const target = currentList.find(b => b.id === id);
   const merged = target ? { ...target, ...patch, updatedAt: new Date().toISOString() } : { id, ...patch };
 
-  // ถ้ามีการเปลี่ยนจำนวนหรือประเภท ให้คำนวณยอดและจำนวนผู้เข้าร่วมใหม่
   if (patch.quantity !== undefined || patch.category !== undefined) {
     const cat = merged.category || 'lantern';
     const qty = Math.max(1, parseInt(merged.quantity, 10) || 1);
@@ -345,49 +566,7 @@ async function saveFestivalSettings(newSettings) {
 }
 
 /**
- * บีบอัดภาพสลิปโอนเงินด้วย HTML5 Canvas เพื่อให้ขนาดกะทัดรัด อัปโหลดขึ้น Supabase ได้รวดเร็ว 100%
- */
-function compressSlipImage(file, maxWidth = 880, quality = 0.78) {
-  return new Promise((resolve, reject) => {
-    if (!file) {
-      reject(new Error('กรุณาเลือกไฟล์รูปสลิปโอนเงิน'));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('ไม่สามารถอ่านไฟล์รูปภาพได้'));
-    reader.onload = (evt) => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('ไฟล์ที่เลือกไม่ใช่รูปภาพที่ถูกต้อง'));
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        if (width > maxWidth || height > maxWidth) {
-          if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          } else {
-            width = Math.round((width * maxWidth) / height);
-            height = maxWidth;
-          }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(dataUrl);
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
- * วาด QR Matrix สำหรับรหัสบัตร E-Ticket ลงบน Canvas (ไม่ต้องพึ่งพา External API ทำงานได้ 100% แม้ออฟไลน์)
+ * วาด QR Matrix สำหรับรหัสบัตร E-Ticket ลงบน Canvas
  */
 function drawTicketMatrixCode(canvas, codeText) {
   if (!canvas) return;
@@ -417,7 +596,6 @@ function drawTicketMatrixCode(canvas, codeText) {
   drawFinder(0, cells - 7);
   drawFinder(cells - 7, 0);
 
-  // สร้างลวดลาย Deterministic จากรหัสจองและเบอร์โทร
   let hash = 2166136261;
   const str = String(codeText || 'PHRAO-2569');
   for (let i = 0; i < str.length; i++) {
@@ -449,7 +627,7 @@ function drawTicketMatrixCode(canvas, codeText) {
 }
 
 /**
- * สร้างและดาวน์โหลดรูปภาพบัตร E-Ticket ความละเอียดสูง (.png) ลงมือถือ/คอมพิวเตอร์ของลูกค้า
+ * สร้างและดาวน์โหลดรูปภาพบัตร E-Ticket ความละเอียดสูง (.png)
  */
 function downloadETicketAsPng(booking) {
   if (!booking) return;
@@ -460,7 +638,6 @@ function downloadETicketAsPng(booking) {
 
   const isLantern = booking.category === 'lantern';
 
-  // พื้นหลังไล่เฉดสี
   const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
   if (isLantern) {
     grad.addColorStop(0, '#0B132B');
@@ -474,12 +651,10 @@ function downloadETicketAsPng(booking) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // กรอบทองมงคล
   ctx.strokeStyle = '#F59E0B';
   ctx.lineWidth = 6;
   ctx.strokeRect(32, 32, canvas.width - 64, canvas.height - 64);
 
-  // ส่วนหัวบัตร
   ctx.fillStyle = '#FBBF24';
   ctx.font = 'bold 34px Prompt, sans-serif';
   ctx.textAlign = 'center';
@@ -497,14 +672,12 @@ function downloadETicketAsPng(booking) {
   ctx.font = '26px Prompt, sans-serif';
   ctx.fillText('ณ โฮงชาฮักมี ต.แม่ปั๋ง อ.พร้าว จ.เชียงใหม่ | โทร. 081-669-6653 (คุณฝ้าย)', canvas.width / 2, 215);
 
-  // กล่องเนื้อหาสีครีม
   ctx.fillStyle = '#FDFBF7';
   ctx.fillRect(65, 255, canvas.width - 130, 880);
   ctx.strokeStyle = '#D97706';
   ctx.lineWidth = 3;
   ctx.strokeRect(65, 255, canvas.width - 130, 880);
 
-  // รหัสการจอง
   ctx.fillStyle = '#0F172A';
   ctx.font = 'bold 30px Prompt, sans-serif';
   ctx.fillText('รหัสการจอง (BOOKING ID)', canvas.width / 2, 315);
@@ -513,7 +686,6 @@ function downloadETicketAsPng(booking) {
   ctx.font = 'bold 60px Prompt, monospace';
   ctx.fillText(booking.id, canvas.width / 2, 385);
 
-  // สถานะบัตร
   const statusMap = {
     approved: { label: '✅ อนุมัติสลิปแล้ว (ยืนยันสมบูรณ์)', color: '#059669' },
     pending: { label: '⏳ แนบสลิปแล้ว (ใช้ยื่นลงทะเบียนหน้างานได้ทันที)', color: '#D97706' },
@@ -527,7 +699,6 @@ function downloadETicketAsPng(booking) {
   ctx.font = 'bold 28px Prompt, sans-serif';
   ctx.fillText(st.label, canvas.width / 2, 435);
 
-  // เส้นคั่น
   ctx.strokeStyle = '#CBD5E1';
   ctx.setLineDash([10, 8]);
   ctx.beginPath();
@@ -536,7 +707,6 @@ function downloadETicketAsPng(booking) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // รายละเอียดผู้จอง
   ctx.textAlign = 'left';
   const leftX = 115;
   let y = 525;
@@ -593,12 +763,10 @@ function downloadETicketAsPng(booking) {
     y += 30;
   }
 
-  // วาด QR Code ประจำบัตร
   const qrCanvas = document.createElement('canvas');
   drawTicketMatrixCode(qrCanvas, `${booking.id}|${booking.phone}|${booking.eventDate}`);
   ctx.drawImage(qrCanvas, canvas.width / 2 - 90, 920, 180, 180);
 
-  // ส่วนท้ายเครดิตผู้พัฒนา
   ctx.textAlign = 'center';
   ctx.fillStyle = '#FDE68A';
   ctx.font = 'bold 22px Prompt, sans-serif';

@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS public.bookings (
     total_amount INTEGER NOT NULL,                    -- ยอดชำระเงินรวม (บาท)
     payment_method TEXT DEFAULT 'promptpay_qr',       -- 'promptpay_qr' หรือ 'cash'
     slip_data_url TEXT,                               -- รูปสลิปโอนเงิน (Base64 บีบอัดแล้ว หรือ Storage URL)
+    slip_qr_ref TEXT,                                 -- รหัสอ้างอิงธุรกรรมที่สแกนได้จาก QR ในรูปสลิป (ป้องกันสลิปซ้ำ)
+    slip_qr_raw TEXT,                                 -- ข้อมูลดิบจาก QR บนสลิปธนาคาร
     payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'approved', 'rejected')),
     checked_in BOOLEAN NOT NULL DEFAULT FALSE,        -- สถานะเช็คอินรับโคมหน้างานเวลา 18.00 น.
     checked_in_at TIMESTAMPTZ,                        -- วัน-เวลาที่เช็คอินรับของ
