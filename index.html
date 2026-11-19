@@ -668,44 +668,161 @@
       .checkin-row { flex-direction: column; }
       .checkin-row input, .checkin-row button { width: 100%; min-height: 2.75rem; font-size: 1rem; }
       .admin-panel__head { flex-wrap: wrap; align-items: flex-start; gap: 0.35rem; }
-      .booking-scroll { overflow: visible; }
-      .booking-table thead { display: none; }
-      .booking-table, .booking-table tbody, .booking-table tr, .booking-table td { display: block; width: auto; }
-      .booking-table tr {
-        background: var(--night);
-        border: 1px solid rgba(217, 224, 214, 0.14);
-        border-radius: 14px;
-        padding: 0.75rem 0.85rem;
-        margin-bottom: 0.75rem;
-      }
-      .booking-table td {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.15rem;
-        padding: 0.45rem 0;
-        border: 0;
-        text-align: left;
-        font-size: 0.95rem;
-      }
-      .booking-table td::before {
-        content: attr(data-label);
-        color: rgba(217, 224, 214, 0.7);
-        font-weight: 600;
-        font-size: 0.75rem;
-      }
-      .booking-table td[colspan]::before { content: none; }
-      .booking-table td[colspan] { display: block; text-align: center; }
-      .booking-table td:first-child { font-size: 1.05rem; }
-      .booking-table td.booking-actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        gap: 0.4rem;
-        padding-top: 0.55rem;
-      }
-      .booking-table td.booking-actions::before { content: none; }
-      .booking-table td.booking-actions button { min-height: 2.75rem; padding: 0.4rem 0.7rem; font-size: 0.85rem; }
+      .booking-card__actions { flex-direction: column; }
+      .booking-card__actions .btn-main,
+      .booking-card__actions .btn-side { width: 100%; }
+    }
+
+    .booking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .booking-card {
+      background: var(--night);
+      border: 1px solid rgba(217, 224, 214, 0.14);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .booking-card--pending {
+      border-color: rgba(201, 137, 42, 0.45);
+      background: linear-gradient(180deg, rgba(201, 137, 42, 0.08), transparent 48%), var(--night);
+    }
+    .booking-card__top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.45rem 0.75rem;
+      align-items: flex-start;
+    }
+    .booking-card__id {
+      font-family: ui-monospace, Consolas, monospace;
+      font-weight: 800;
+      color: var(--candle);
+      font-size: 1rem;
+    }
+    .booking-card__meta {
+      color: rgba(217, 224, 214, 0.72);
+      font-size: 0.78rem;
+      margin-top: 0.15rem;
+    }
+    .booking-card__name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.35;
+    }
+    .booking-card__phone {
+      color: rgba(217, 224, 214, 0.78);
+      font-size: 0.88rem;
+      margin-top: 0.15rem;
+    }
+    .booking-card__facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .booking-fact {
+      background: rgba(217, 224, 214, 0.06);
+      border: 1px solid rgba(217, 224, 214, 0.12);
+      border-radius: 10px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      color: var(--mist);
+    }
+    .booking-fact strong { color: #fff; font-weight: 700; }
+    .booking-fact--money strong { color: #6ee7b7; }
+    .booking-card__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: stretch;
+      padding-top: 0.15rem;
+      border-top: 1px solid rgba(217, 224, 214, 0.1);
+    }
+    .booking-card__actions .btn-main {
+      min-height: 2.75rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      border: none;
+      cursor: pointer;
+      flex: 1 1 10rem;
+    }
+    .booking-card__actions .btn-main--review {
+      background: var(--candle);
+      color: var(--ink);
+    }
+    .booking-card__actions .btn-main--checkin {
+      background: var(--forest);
+      color: var(--paper);
+    }
+    .booking-card__actions .btn-side {
+      min-height: 2.75rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border: 1px solid rgba(217, 224, 214, 0.18);
+      background: var(--night-soft);
+      color: var(--mist);
+      cursor: pointer;
+    }
+    .booking-card__actions .btn-side--danger {
+      border-color: rgba(166, 107, 107, 0.45);
+      color: #e8c4c4;
+    }
+    .booking-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .booking-status--pending {
+      background: rgba(201, 137, 42, 0.18);
+      color: #f0d39a;
+      border-color: rgba(201, 137, 42, 0.35);
+    }
+    .booking-status--approved {
+      background: rgba(47, 74, 58, 0.45);
+      color: #9fd4b0;
+      border-color: rgba(110, 231, 183, 0.28);
+    }
+    .booking-status--rejected {
+      background: rgba(127, 48, 48, 0.35);
+      color: #f0b4b4;
+      border-color: rgba(248, 113, 113, 0.35);
+    }
+    .booking-empty {
+      text-align: center;
+      color: rgba(217, 224, 214, 0.7);
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+    }
+    .booking-list-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+      align-items: baseline;
+      margin-bottom: 0.15rem;
+    }
+    .booking-list-head h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--candle);
+      font-weight: 800;
+    }
+    .booking-list-count {
+      font-size: 0.78rem;
+      color: rgba(217, 224, 214, 0.7);
     }
 
     .modal-overlay {
@@ -983,67 +1100,55 @@
         </div>
       </div>
 
-      <!-- โมดูลที่ 3 & โมดูลที่ 7: ตารางจัดการรายการจอง ตรวจสลิป และปุ่ม Export / พิมพ์ใบลงทะเบียน -->
+      <!-- โมดูลที่ 3 & โมดูลที่ 7: รายการจองแบบการ์ด ตรวจสลิป / เช็คอิน / Export -->
       <div class="admin-panel space-y-4">
+        <div class="booking-list-head">
+          <h3>รายการจองบัตรมินิบอลลูน</h3>
+          <span class="booking-list-count" id="adminBookingsCount">0 รายการ</span>
+        </div>
+        <p style="margin:0;font-size:0.8rem;color:rgba(217,224,214,0.7);">ขั้นที่ 1 ตรวจสลิป → ขั้นที่ 2 อนุมัติ → ขั้นที่ 3 เช็คอินหน้างาน</p>
+
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div class="admin-filters flex flex-wrap items-center gap-2">
             <select id="adminFilterCategoryDate" onchange="renderAdminBookingsTable()"
               class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white">
-              <option value="all">📅 วันที่ทั้งหมด</option>
-              <option value="balloon_2026-11-20">🎈 มินิบอลลูน ศุกร์ 20 พ.ย. 2569</option>
-              <option value="balloon_2026-11-21">🎈 มินิบอลลูน เสาร์ 21 พ.ย. 2569</option>
+              <option value="all">วันที่ทั้งหมด</option>
+              <option value="balloon_2026-11-20">ศุกร์ 20 พ.ย. 2569</option>
+              <option value="balloon_2026-11-21">เสาร์ 21 พ.ย. 2569</option>
             </select>
 
             <select id="adminFilterStatus" onchange="renderAdminBookingsTable()"
               class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white">
-              <option value="all">📋 สถานะสลิปทั้งหมด</option>
-              <option value="pending">⏳ รอตรวจสอบสลิป</option>
-              <option value="approved">✅ อนุมัติสลิปแล้ว</option>
-              <option value="checkedin">✅ เช็คอินแล้ว</option>
-              <option value="not_checkedin">🕒 ยังไม่เช็คอินหน้างาน</option>
-              <option value="rejected">❌ ยกเลิก/ปฏิเสธ</option>
+              <option value="pending">รอตรวจสลิป</option>
+              <option value="all">สถานะทั้งหมด</option>
+              <option value="approved">อนุมัติแล้ว</option>
+              <option value="checkedin">เช็คอินแล้ว</option>
+              <option value="not_checkedin">ยังไม่เช็คอิน</option>
+              <option value="rejected">ยกเลิก/ปฏิเสธ</option>
             </select>
 
             <input id="adminSearchInput" type="text" oninput="renderAdminBookingsTable()"
-              placeholder="ค้นหาชื่อ, เบอร์โทร, รหัสจอง..."
+              placeholder="ค้นหาชื่อ เบอร์ หรือรหัสจอง"
               class="px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white w-56" />
           </div>
 
-          <!-- ปุ่ม Export Excel & พิมพ์ใบรายชื่อหน้างาน -->
           <div class="admin-exports flex flex-wrap items-center gap-2">
             <button onclick="exportBookingsToCsv()"
               class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold shadow">
-              📥 Export Excel (CSV ภาษาไทย)
+              Export CSV
             </button>
             <button onclick="printRegistrationCheckinSheet()"
               class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold">
-              🖨️ พิมพ์ใบเช็คอินหน้างาน (A4)
+              พิมพ์ใบเช็คอิน
             </button>
             <button onclick="printExecutiveSummarySheet()"
               class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold">
-              🖨️ พิมพ์ใบสรุปรายงานผู้บริหาร (A4)
+              พิมพ์สรุปรายงาน
             </button>
           </div>
         </div>
 
-        <div class="booking-scroll overflow-x-auto">
-          <table class="booking-table w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-slate-800 text-slate-400 uppercase">
-                <th class="py-3 px-2.5">รหัสจอง</th>
-                <th class="py-3 px-2.5">กิจกรรม / วันที่</th>
-                <th class="py-3 px-2.5">ชื่อลูกค้า / เบอร์โทร</th>
-                <th class="py-3 px-2.5">จำนวน</th>
-                <th class="py-3 px-2.5">ยอดเงิน</th>
-                <th class="py-3 px-2.5">สลิปโอนเงิน</th>
-                <th class="py-3 px-2.5">สถานะสลิป</th>
-                <th class="py-3 px-2.5">เช็คอิน 18.00 น.</th>
-                <th class="py-3 px-2.5 text-right">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="adminBookingsTableBody" class="divide-y divide-slate-800/80"></tbody>
-          </table>
-        </div>
+        <div id="adminBookingsList" class="booking-list"></div>
       </div>
     </section>
 

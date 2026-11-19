@@ -773,71 +773,80 @@ function getFilteredAdminBookings() {
 }
 
 function renderAdminBookingsTable() {
-  const tbody = document.getElementById('adminBookingsTableBody');
-  if (!tbody) return;
-  const rows = getFilteredAdminBookings();
+  const list = document.getElementById('adminBookingsList');
+  const countEl = document.getElementById('adminBookingsCount');
+  if (!list) return;
+
+  const rows = getFilteredAdminBookings().slice().sort((a, b) => {
+    const rank = (x) => {
+      if (x.paymentStatus === 'pending') return 0;
+      if (x.paymentStatus === 'approved' && !x.checkedIn) return 1;
+      if (x.paymentStatus === 'approved') return 2;
+      return 3;
+    };
+    const d = rank(a) - rank(b);
+    if (d !== 0) return d;
+    return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+  });
+
+  if (countEl) countEl.textContent = `${rows.length} รายการ`;
 
   if (rows.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="py-8 text-center text-slate-400">
-          ยังไม่มีรายการจองที่ตรงกับตัวกรอง (สามารถกดปุ่ม "➕ บันทึกขายหน้างาน" หรือทดสอบจองจากหน้าลูกค้าได้ทันที)
-        </td>
-      </tr>
-    `;
+    list.innerHTML = `<div class="booking-empty">ยังไม่มีรายการที่ตรงตัวกรอง — เปลี่ยนตัวกรองเป็น “สถานะทั้งหมด” หรือบันทึกขายหน้างาน</div>`;
     return;
   }
 
-  tbody.innerHTML = rows.map(b => {
-    const isLantern = b.category === 'lantern';
-    const statusPill = b.paymentStatus === 'approved'
-      ? `<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">✅ อนุมัติแล้ว</span>`
-      : b.paymentStatus === 'rejected'
-        ? `<span class="px-2.5 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-bold">❌ ยกเลิก</span>`
-        : `<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">⏳ รอตรวจสลิป</span>`;
+  list.innerHTML = rows.map(b => {
+    const pending = b.paymentStatus === 'pending';
+    const approved = b.paymentStatus === 'approved';
+    const rejected = b.paymentStatus === 'rejected';
+    const statusClass = approved ? 'booking-status--approved' : rejected ? 'booking-status--rejected' : 'booking-status--pending';
+    const statusText = approved ? (b.checkedIn ? 'อนุมัติแล้ว · เช็คอินแล้ว' : 'อนุมัติแล้ว') : rejected ? 'ยกเลิก/ปฏิเสธ' : 'รอตรวจสลิป';
+    const dateLabel = DATE_THAI_LABELS[b.eventDate] || b.eventDate;
+    const channelNote = b.channel === 'walkin' ? 'ขายหน้างาน' : 'จองออนไลน์';
 
-    const qrBadge = b.slipQrRef && b.slipQrRef.startsWith('QR-')
-      ? `<div class="text-[10px] text-emerald-400 font-mono mt-0.5" title="${escapeHtml(b.slipQrRef)}">🛡️ QR: ${escapeHtml(b.slipQrRef.slice(3, 15))}..</div>`
+    let mainBtn = '';
+    if (pending && b.slipDataUrl) {
+      mainBtn = `<button type="button" class="btn-main btn-main--review" onclick="openSlipInspectorModal('${b.id}')">ตรวจสลิปและอนุมัติ</button>`;
+    } else if (pending) {
+      mainBtn = `<button type="button" class="btn-main btn-main--review" onclick="adminChangeSlipStatus('${b.id}', 'approved')">อนุมัติยอด (ไม่มีรูปสลิป)</button>`;
+    } else if (approved && !b.checkedIn) {
+      mainBtn = `<button type="button" class="btn-main btn-main--checkin" onclick="adminToggleCheckin('${b.id}')">เช็คอินหน้างาน</button>`;
+    } else if (approved && b.checkedIn) {
+      mainBtn = `<button type="button" class="btn-main btn-main--checkin" onclick="adminToggleCheckin('${b.id}')">ยกเลิกเช็คอิน</button>`;
+    } else {
+      mainBtn = `<button type="button" class="btn-main btn-main--review" onclick="openSlipInspectorModal('${b.id}')">ดูรายละเอียด</button>`;
+    }
+
+    const slipSide = b.slipDataUrl
+      ? `<button type="button" class="btn-side" onclick="openSlipInspectorModal('${b.id}')">ดูสลิป</button>`
       : '';
 
-    const slipBtn = b.slipDataUrl
-      ? `<div>
-           <button onclick="openSlipInspectorModal('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold">🔍 ดูสลิป</button>
-           ${qrBadge}
-         </div>`
-      : `<span class="text-slate-500">${b.channel === 'walkin' ? 'ขายหน้างาน' : 'ไม่มีรูป'}</span>`;
-
-    const checkinBtn = b.checkedIn
-      ? `<button onclick="adminToggleCheckin('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-blue-600/30 text-blue-200 border border-blue-500/40 font-bold" title="คลิกเพื่อยกเลิกสถานะเช็คอิน">🏮 รับของแล้ว</button>`
-      : `<button onclick="adminToggleCheckin('${b.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-300 border border-slate-700 font-bold transition">กดเช็คอิน</button>`;
-
     return `
-      <tr class="hover:bg-slate-800/50 transition">
-        <td class="py-3 px-2.5 font-mono font-extrabold text-amber-400" data-label="รหัสจอง">${b.id}</td>
-        <td class="py-3 px-2.5" data-label="วันงาน">
-          <div class="font-bold text-white">${isLantern ? '🏮 โคมลอย' : '🎈 มินิบอลลูน'}</div>
-          <div class="text-[11px] text-slate-400">${DATE_THAI_LABELS[b.eventDate] || b.eventDate}</div>
-        </td>
-        <td class="py-3 px-2.5" data-label="ลูกค้า">
-          <div class="font-bold text-white">${escapeHtml(b.customerName)}</div>
-          <div class="text-[11px] text-slate-400">${escapeHtml(b.phone)} ${b.note ? `• ${escapeHtml(b.note)}` : ''}</div>
-        </td>
-        <td class="py-3 px-2.5 font-bold text-slate-200" data-label="จำนวน">
-          ${b.quantity} ${isLantern ? 'โคม' : 'ใบ'} <span class="text-slate-400 font-normal">(${b.attendees} ท่าน)</span>
-        </td>
-        <td class="py-3 px-2.5 font-extrabold text-emerald-400" data-label="ยอดเงิน">${Number(b.totalAmount).toLocaleString()}฿</td>
-        <td class="py-3 px-2.5" data-label="สลิป">${slipBtn}</td>
-        <td class="py-3 px-2.5" data-label="สถานะ">${statusPill}</td>
-        <td class="py-3 px-2.5" data-label="เช็คอิน">${checkinBtn}</td>
-        <td class="py-3 px-2.5 text-right booking-actions">
-          ${b.paymentStatus !== 'approved' ? `
-            <button onclick="adminChangeSlipStatus('${b.id}', 'approved')" class="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold" title="อนุมัติสลิป">✓ อนุมัติ</button>
-          ` : ''}
-          <button onclick="openTicketById('${b.id}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold" title="เปิดบัตร E-Ticket">🎫 บัตร</button>
-          <button onclick="openEditBookingModal('${b.id}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold" title="แก้ไขข้อมูล">✏️</button>
-          <button onclick="adminDeleteBooking('${b.id}')" class="px-2 py-1 rounded bg-red-950/80 hover:bg-red-800 text-red-300 border border-red-800/50 font-bold" title="ลบรายการ">🗑️</button>
-        </td>
-      </tr>
+      <article class="booking-card ${pending ? 'booking-card--pending' : ''}">
+        <div class="booking-card__top">
+          <div>
+            <div class="booking-card__id">${escapeHtml(b.id)}</div>
+            <div class="booking-card__meta">${escapeHtml(dateLabel)} · ${channelNote}</div>
+          </div>
+          <span class="booking-status ${statusClass}">${statusText}</span>
+        </div>
+        <div>
+          <div class="booking-card__name">${escapeHtml(b.customerName)}</div>
+          <div class="booking-card__phone">${escapeHtml(b.phone)}${b.note ? ` · ${escapeHtml(b.note)}` : ''}</div>
+        </div>
+        <div class="booking-card__facts">
+          <span class="booking-fact"><strong>${b.quantity}</strong> ใบ (${b.attendees} ท่าน)</span>
+          <span class="booking-fact booking-fact--money"><strong>${Number(b.totalAmount).toLocaleString()}฿</strong></span>
+        </div>
+        <div class="booking-card__actions">
+          ${mainBtn}
+          ${slipSide}
+          <button type="button" class="btn-side" onclick="openTicketById('${b.id}')">เปิดบัตร</button>
+          <button type="button" class="btn-side" onclick="openEditBookingModal('${b.id}')">แก้ไข</button>
+          <button type="button" class="btn-side btn-side--danger" onclick="adminDeleteBooking('${b.id}')">ลบ</button>
+        </div>
+      </article>
     `;
   }).join('');
 }
@@ -892,14 +901,14 @@ function openSlipInspectorModal(bookingId) {
       }
     </div>
 
-    <div class="grid grid-cols-3 gap-2 pt-2">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
       <button onclick="adminChangeSlipStatus('${b.id}', 'approved', true)"
-        class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+        class="py-3 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm order-1 sm:order-none">
         อนุมัติสลิปถูกต้อง
       </button>
       <button onclick="adminChangeSlipStatus('${b.id}', 'pending', true)"
         class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs">
-        รอตรวจสอบ
+        ตั้งเป็นรอตรวจ
       </button>
       <button onclick="adminChangeSlipStatus('${b.id}', 'rejected', true)"
         class="py-2.5 px-3 rounded-xl bg-red-600/25 hover:bg-red-600/40 text-red-300 border border-red-500/40 font-bold text-xs">

@@ -159,19 +159,19 @@ async function fetchAllBookings() {
 /**
  * ตรวจสอบว่าสลิปโอนเงินใบนี้ (จากรหัส QR สลิป หรือ ลายนิ้วมือภาพ SHA-256) เคยถูกใช้จองไปแล้วหรือยัง
  */
+function isWeakSlipQrRef(ref) {
+  const s = String(ref || '');
+  // ค่าเก่าที่ตัดจาก prefix ร่วมของ QR สลิปธนาคาร (ไม่ unique ต่อรายการโอน)
+  if (/^QR-0038/i.test(s)) return true;
+  if (s.startsWith('QR-') && s.length < 20) return true;
+  return false;
+}
+
 async function findDuplicateSlipBooking(slipQrRef, slipQrRaw) {
   if (!slipQrRef && !slipQrRaw) return null;
 
-  // 1. ตรวจสอบจาก Supabase แบบ Real-time ก่อน
+  // 1. ตรวจสอบจาก Supabase แบบ Real-time ก่อน — ใช้ raw เต็มเป็นหลัก (unique จริง)
   try {
-    if (slipQrRef) {
-      const rows = await supabaseRestFetch(
-        `bookings?slip_qr_ref=eq.${encodeURIComponent(slipQrRef)}&payment_status=neq.rejected&select=id,customer_name,event_date,total_amount,created_at`
-      );
-      if (Array.isArray(rows) && rows.length > 0) {
-        return dbRowToBooking(rows[0]);
-      }
-    }
     if (slipQrRaw) {
       const rowsRaw = await supabaseRestFetch(
         `bookings?slip_qr_raw=eq.${encodeURIComponent(slipQrRaw)}&payment_status=neq.rejected&select=id,customer_name,event_date,total_amount,created_at`
@@ -180,16 +180,26 @@ async function findDuplicateSlipBooking(slipQrRef, slipQrRaw) {
         return dbRowToBooking(rowsRaw[0]);
       }
     }
+    if (slipQrRef && !isWeakSlipQrRef(slipQrRef)) {
+      const rows = await supabaseRestFetch(
+        `bookings?slip_qr_ref=eq.${encodeURIComponent(slipQrRef)}&payment_status=neq.rejected&select=id,customer_name,event_date,total_amount,created_at`
+      );
+      if (Array.isArray(rows) && rows.length > 0) {
+        return dbRowToBooking(rows[0]);
+      }
+    }
   } catch (err) {
     console.warn('Duplicate slip cloud check fallback:', err.message);
   }
 
   // 2. ตรวจสอบใน Local Cache สำรอง
   const local = getLocalBookingsCache();
-  return local.find(b =>
-    b.paymentStatus !== 'rejected' &&
-    ((slipQrRef && b.slipQrRef === slipQrRef) || (slipQrRaw && b.slipQrRaw === slipQrRaw))
-  ) || null;
+  return local.find(b => {
+    if (b.paymentStatus === 'rejected') return false;
+    if (slipQrRaw && b.slipQrRaw === slipQrRaw) return true;
+    if (slipQrRef && !isWeakSlipQrRef(slipQrRef) && b.slipQrRef === slipQrRef) return true;
+    return false;
+  }) || null;
 }
 
 /**
@@ -374,6 +384,17 @@ function compressAndScanSlipImage(file, maxWidth = 880, quality = 0.78) {
         const parsedQr = parseThaiBankSlipQrPayload(rawQrText);
         const fileHash = await computeFileSha256(file);
 
+        // รหัสกันสลิปซ้ำต้อง unique ต่อรายการโอน — ใช้ SHA-256 ของ QR เต็ม (ไม่ตัด prefix ร่วมของธนาคาร)
+        let slipQrRef = fileHash;
+        let slipQrRaw = fileHash;
+        let slipQrDisplay = '';
+        if (parsedQr && parsedQr.raw) {
+          const rawHash = await sha256Hex(parsedQr.raw);
+          slipQrRef = `QR-${rawHash.slice(0, 40)}`;
+          slipQrRaw = parsedQr.raw;
+          slipQrDisplay = parsedQr.displayRef || rawHash.slice(0, 16);
+        }
+
         // 2. ย่อและบีบอัดรูปสลิปสำหรับเก็บลงฐานข้อมูล
         let width = img.width;
         let height = img.height;
@@ -399,9 +420,9 @@ function compressAndScanSlipImage(file, maxWidth = 880, quality = 0.78) {
           dataUrl: encoded.dataUrl,
           mime: encoded.mime,
           qrDetected: Boolean(parsedQr && parsedQr.raw),
-          slipQrRef: parsedQr ? parsedQr.ref : fileHash,
-          slipQrDisplay: parsedQr ? parsedQr.displayRef : '',
-          slipQrRaw: parsedQr ? parsedQr.raw : fileHash,
+          slipQrRef,
+          slipQrDisplay,
+          slipQrRaw,
           amountFromQr: parsedQr && parsedQr.amountFromQr != null ? parsedQr.amountFromQr : null
         });
       };
